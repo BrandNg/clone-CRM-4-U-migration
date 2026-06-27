@@ -22,11 +22,7 @@ set +a
 : "${POSTGRES_DB:=telestar_crm}"
 : "${R2_REMOTE:=r2}"
 : "${R2_PREFIX:=crm-4-u/postgres}"
-
-if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
-  echo "[backup] POSTGRES_PASSWORD is required" >&2
-  exit 1
-fi
+: "${POSTGRES_DUMP_IMAGE:=postgres:16-bookworm}"
 
 if [[ -z "${R2_BUCKET:-}" ]]; then
   echo "[backup] R2_BUCKET is required" >&2
@@ -55,10 +51,24 @@ trap cleanup EXIT
 
 cd "${ROOT_DIR}"
 
-echo "[backup] dumping ${POSTGRES_DB} from postgres container"
-docker compose --env-file "${ENV_FILE}" exec -T postgres \
-  pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" --no-owner --no-acl \
-  | gzip -9 > "${BACKUP_FILE}"
+BACKUP_DATABASE_URL="${BACKUP_DATABASE_URL:-${DIRECT_URL:-${DATABASE_URL:-}}}"
+
+if [[ -n "${BACKUP_DATABASE_URL}" && "${BACKUP_DATABASE_URL}" != *"@postgres:"* ]]; then
+  echo "[backup] dumping ${POSTGRES_DB} via ${POSTGRES_DUMP_IMAGE}"
+  docker run --rm "${POSTGRES_DUMP_IMAGE}" \
+    pg_dump "${BACKUP_DATABASE_URL}" --no-owner --no-acl \
+    | gzip -9 > "${BACKUP_FILE}"
+else
+  if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
+    echo "[backup] POSTGRES_PASSWORD is required for local postgres backups" >&2
+    exit 1
+  fi
+
+  echo "[backup] dumping ${POSTGRES_DB} from postgres container"
+  docker compose --env-file "${ENV_FILE}" exec -T postgres \
+    pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" --no-owner --no-acl \
+    | gzip -9 > "${BACKUP_FILE}"
+fi
 
 echo "[backup] uploading to ${REMOTE_PATH}"
 rclone copyto "${BACKUP_FILE}" "${REMOTE_PATH}"
