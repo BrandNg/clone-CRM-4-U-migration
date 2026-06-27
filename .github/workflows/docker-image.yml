@@ -32,11 +32,15 @@ jobs:
 
       - name: Build image
         if: github.event_name == 'pull_request'
-        run: docker buildx build --progress=plain --file ./Dockerfile .
+        run: |
+          set -o pipefail
+          docker buildx build --progress=plain --file ./Dockerfile . 2>&1 | tee docker-build.log
+        shell: bash
 
       - name: Build and push image
         if: github.event_name != 'pull_request'
         run: |
+          set -o pipefail
           docker buildx build \
             --progress=plain \
             --file ./Dockerfile \
@@ -47,4 +51,21 @@ jobs:
             --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.title=${GITHUB_REPOSITORY#*/}" \
             --push \
-            .
+            . 2>&1 | tee docker-build.log
+        shell: bash
+
+      - name: Summarize Docker build failure
+        if: failure()
+        run: |
+          {
+            echo "## Docker build log tail"
+            echo
+            echo '```text'
+            if [ -f docker-build.log ]; then
+              tail -n 160 docker-build.log
+            else
+              echo "docker-build.log was not created."
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
