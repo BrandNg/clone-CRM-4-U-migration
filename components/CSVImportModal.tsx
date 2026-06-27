@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from 'react';
 import { X, Upload, ChevronRight, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
-import * as XLSX from 'xlsx';
+import { readSheet } from 'read-excel-file/browser';
 
 interface Props {
   onClose: () => void;
@@ -147,7 +147,7 @@ export default function CSVImportModal({ onClose, onSuccess }: Props) {
 
   const processFile = useCallback((file: File) => {
     const isCSV = file.name.endsWith('.csv');
-    const isXLSX = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+    const isXLSX = file.name.endsWith('.xlsx');
     if (!isCSV && !isXLSX) {
       showToast('Please select a .csv or .xlsx file', 'error');
       return;
@@ -156,25 +156,20 @@ export default function CSVImportModal({ onClose, onSuccess }: Props) {
     const reader = new FileReader();
 
     if (isXLSX) {
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      readSheet(file)
+        .then((json) => {
           if (!json.length) { showToast('Spreadsheet appears to be empty', 'error'); return; }
-          const headers = (json[0] as string[]).map(String);
-          const rows = json.slice(1).map((r) => (r as any[]).map(String));
+          const headers = json[0].map((value) => String(value ?? ''));
+          const rows = json.slice(1).map((row) => row.map((value) => String(value ?? '')));
           if (!headers.length) { showToast('No columns found', 'error'); return; }
           setCsvHeaders(headers);
           setCsvRows(rows);
           setFieldMap(autoDetect(headers));
           setStep('map');
-        } catch {
+        })
+        .catch(() => {
           showToast('Failed to parse XLSX file', 'error');
-        }
-      };
-      reader.readAsArrayBuffer(file);
+        });
     } else {
       reader.onload = (e) => {
         const text = e.target?.result as string;
@@ -391,7 +386,7 @@ export default function CSVImportModal({ onClose, onSuccess }: Props) {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".csv,.xlsx,.xls"
+                    accept=".csv,.xlsx"
                     className="hidden"
                     onChange={handleFileChange}
                   />
