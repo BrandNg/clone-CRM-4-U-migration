@@ -36,7 +36,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production \
   PORT=3000 \
-  HOSTNAME=0.0.0.0
+  HOSTNAME=0.0.0.0 \
+  DATABASE_URL="postgresql://crm:crm@postgres:5432/telestar_crm" \
+  DIRECT_URL="postgresql://crm:crm@postgres:5432/telestar_crm" \
+  AUTH_SECRET="build-time-placeholder" \
+  ENCRYPTION_KEY="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  NEXTAUTH_URL="http://localhost:3000"
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates openssl \
