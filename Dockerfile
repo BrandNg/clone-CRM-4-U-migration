@@ -31,7 +31,9 @@ ENV DATABASE_URL="postgresql://crm:crm@postgres:5432/telestar_crm" \
   DIRECT_URL="postgresql://crm:crm@postgres:5432/telestar_crm" \
   AUTH_SECRET="build-time-placeholder" \
   ENCRYPTION_KEY="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
-  NEXTAUTH_URL="http://localhost:3000"
+  NEXTAUTH_URL="http://localhost:3000" \
+  NEXT_TELEMETRY_DISABLED=1 \
+  NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN npm run build
 
