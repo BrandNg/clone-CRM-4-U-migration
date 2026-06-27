@@ -26,7 +26,7 @@ degrades gracefully if it is unreachable.
 
 - A managed **PostgreSQL 16** instance (RDS). Create a database `telestar_crm`.
 - A managed **Redis** instance reachable from the host.
-- An always-on **Node 20+** host with a process manager (PM2 recommended).
+- An always-on **Node 24+** host with a process manager (PM2 recommended).
 - DNS + TLS terminating at a load balancer / reverse proxy in front of the web process
   (the security headers in `next.config.ts` — including HSTS — assume HTTPS at the edge).
 
