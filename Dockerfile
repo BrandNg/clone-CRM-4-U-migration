@@ -1,4 +1,8 @@
+ARG NPM_VERSION=11.13.0
+
 FROM node:20-bookworm-slim AS deps
+
+ARG NPM_VERSION
 
 WORKDIR /app
 
@@ -7,7 +11,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install -g npm@${NPM_VERSION} \
+  && npm ci
 
 FROM node:20-bookworm-slim AS builder
 
@@ -32,6 +37,8 @@ RUN npm run build
 
 FROM node:20-bookworm-slim AS runner
 
+ARG NPM_VERSION
+
 WORKDIR /app
 
 ENV NODE_ENV=production \
@@ -49,7 +56,8 @@ RUN apt-get update \
 
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
-RUN npm ci --omit=dev \
+RUN npm install -g npm@${NPM_VERSION} \
+  && npm ci --omit=dev \
   && npx prisma generate \
   && npm cache clean --force
 

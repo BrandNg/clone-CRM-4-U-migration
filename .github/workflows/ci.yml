@@ -45,6 +45,9 @@ jobs:
       - name: Apply database migrations
         run: npx prisma migrate deploy
 
+      - name: Seed CI database
+        run: npm run db:seed
+
       - name: Lint
         run: npm run lint
 
