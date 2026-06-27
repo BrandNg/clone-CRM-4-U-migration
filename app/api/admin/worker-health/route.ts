@@ -15,10 +15,9 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req?: NextRequest) {
   const userOrRes = await requireRole('floor_manager');
   if (userOrRes instanceof NextResponse) return userOrRes;
-  const user = userOrRes as SessionUser;
 
   try {
     // 1. Check Redis Ping
@@ -55,7 +54,7 @@ export async function GET(req: NextRequest) {
         try {
           const counts = await item.q.getJobCounts();
           return { name: item.name, counts };
-        } catch (err) {
+        } catch {
           return { name: item.name, counts: null, error: 'Failed to fetch counts' };
         }
       })
@@ -83,7 +82,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   const userOrRes = await requireRole('floor_manager');
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;

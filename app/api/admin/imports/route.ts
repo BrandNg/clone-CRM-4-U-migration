@@ -1,14 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth';
-import type { SessionUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const userOrRes = await requireRole('floor_manager');
   if (userOrRes instanceof NextResponse) return userOrRes;
-  const user = userOrRes as SessionUser;
 
   try {
     const importBatches = await prisma.importBatch.findMany({

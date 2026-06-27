@@ -1,8 +1,6 @@
 import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { GET as getJobs } from '@/app/api/admin/jobs/route';
 import { GET as getOutbound } from '@/app/api/admin/outbound/route';
-import { GET as getImports } from '@/app/api/admin/imports/route';
-import { GET as getImportsDetail } from '@/app/api/admin/imports/[id]/route';
 import { GET as getWorkerHealth, POST as postWorkerHealth } from '@/app/api/admin/worker-health/route';
 import { POST as importLeads } from '@/app/api/leads/import/route';
 import { prisma, tenantStorage } from '@/lib/prisma';

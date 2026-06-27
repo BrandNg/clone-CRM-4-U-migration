@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Activity, AlertCircle, CheckCircle, RefreshCw, Zap } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { AlertCircle, CheckCircle, RefreshCw, Zap } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 
 interface QueueCount {
@@ -48,7 +48,7 @@ export default function WorkerHealthAdminPage() {
   const [triggering, setTriggering] = useState(false);
   const [pollingCount, setPollingCount] = useState(0);
 
-  const fetchHealth = async (showNotification = false) => {
+  const fetchHealth = useCallback(async (showNotification = false) => {
     try {
       const res = await fetch('/api/admin/worker-health');
       if (res.ok) {
@@ -65,11 +65,11 @@ export default function WorkerHealthAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     fetchHealth();
-  }, []);
+  }, [fetchHealth]);
 
   // Poll for health check updates if a check was recently enqueued
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function WorkerHealthAdminPage() {
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [pollingCount]);
+  }, [pollingCount, showToast]);
 
   const handleRunHealthCheck = async () => {
     setTriggering(true);

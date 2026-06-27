@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Upload, ChevronRight, X, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 
@@ -46,7 +46,7 @@ export default function ImportsAdminPage() {
   const [batchDetail, setBatchDetail] = useState<BatchDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const fetchBatches = async () => {
+  const fetchBatches = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/imports');
@@ -61,7 +61,7 @@ export default function ImportsAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   const fetchBatchDetail = async (id: string) => {
     setDetailLoading(true);
@@ -84,7 +84,7 @@ export default function ImportsAdminPage() {
 
   useEffect(() => {
     fetchBatches();
-  }, []);
+  }, [fetchBatches]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

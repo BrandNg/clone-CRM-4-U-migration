@@ -1,5 +1,4 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import type { MaintenanceRepairPayload } from '@/lib/bullmq/types';
 
 const mockTaskFindMany = vi.fn();
 const mockTaskUpdate = vi.fn();
@@ -118,7 +117,6 @@ describe('handleRepair — stuck-running', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
   it('marks active job runs older than 15m as failed', async () => {
-    const oldDate = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     mockJobRunFindMany.mockResolvedValue([{ id: 'run-1' }]);
 
     const result = await handleRepair({ types: ['stuck-running'] });

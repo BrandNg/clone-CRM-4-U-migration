@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import type { ImportParsePayload, ImportChunkPayload, ImportCommitPayload } from '@/lib/bullmq/types';
+import type { ImportParsePayload, ImportChunkPayload } from '@/lib/bullmq/types';
 
 // --- Prisma mocks ---
 const mockBatchFindUnique = vi.fn();

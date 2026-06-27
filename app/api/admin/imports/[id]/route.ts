@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth';
-import type { SessionUser } from '@/lib/auth';
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userOrRes = await requireRole('floor_manager');
   if (userOrRes instanceof NextResponse) return userOrRes;
-  const user = userOrRes as SessionUser;
 
   const { id } = await params;
 

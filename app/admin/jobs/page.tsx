@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Database, AlertCircle, Clock, RefreshCw } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 
@@ -29,7 +29,7 @@ export default function JobsAdminPage() {
   const [queueFilter, setQueueFilter] = useState('all');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     setLoading(true);
     try {
       let url = '/api/admin/jobs';
@@ -50,11 +50,11 @@ export default function JobsAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [queueFilter, showToast, statusFilter]);
 
   useEffect(() => {
     fetchJobs();
-  }, [statusFilter, queueFilter]);
+  }, [fetchJobs]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

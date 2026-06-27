@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import type { SessionUser } from '@/lib/auth';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const userOrRes = await requireAuth();
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;

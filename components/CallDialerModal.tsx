@@ -63,10 +63,6 @@ export default function CallDialerModal({ task: _task, lead, onClose, onHangUp }
   const [isSpeaker, setIsSpeaker] = useState(false);
   const [showKeypad, setShowKeypad] = useState(false);
 
-  // SIP.js WebRTC references
-  const [userAgent, setUserAgent] = useState<any>(null);
-  const [session, setSession] = useState<any>(null);
-  
   const userAgentRef = useRef<any>(null);
   const sessionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -107,7 +103,6 @@ export default function CallDialerModal({ task: _task, lead, onClose, onHangUp }
         // Start User Agent
         await newUA.start();
         activeUA = newUA;
-        setUserAgent(newUA);
         userAgentRef.current = newUA;
 
         // Construct destination URI
@@ -129,7 +124,6 @@ export default function CallDialerModal({ task: _task, lead, onClose, onHangUp }
           }
         });
 
-        setSession(inviter);
         sessionRef.current = inviter;
 
         // Monitor session state changes

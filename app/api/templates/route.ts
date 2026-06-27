@@ -6,7 +6,6 @@ import { parseBody } from '@/lib/validation/core';
 import { createTemplateSchema } from '@/lib/validation/schemas';
 import { handleApiError } from '@/lib/api/errors';
 import { cacheGet, cacheSet, listKey, invalidateList } from '@/lib/cache';
-import type { Prisma } from '@prisma/client';
 
 const CACHE_TTL = 60;
 

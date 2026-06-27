@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Mail, AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Mail, AlertCircle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 
 interface OutboundMessage {
@@ -36,7 +36,7 @@ export default function OutboundAdminPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     setLoading(true);
     try {
       let url = '/api/admin/outbound';
@@ -53,11 +53,11 @@ export default function OutboundAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, statusFilter]);
 
   useEffect(() => {
     fetchMessages();
-  }, [statusFilter]);
+  }, [fetchMessages]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -131,9 +131,8 @@ export default function OutboundAdminPage() {
                 {messages.map((msg) => {
                   const isExpanded = expandedId === msg.id;
                   return (
-                    <>
+                    <Fragment key={msg.id}>
                       <tr
-                        key={msg.id}
                         className={`hover:bg-background/40 transition-colors ${
                           isExpanded ? 'bg-background/20' : ''
                         }`}
@@ -226,7 +225,7 @@ export default function OutboundAdminPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>

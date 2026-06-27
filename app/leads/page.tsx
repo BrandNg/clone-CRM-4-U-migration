@@ -200,7 +200,7 @@ export default function LeadsPage() {
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
   };
-  const { data: leads = [], isLoading } = useLeads(filters);
+  const { data: leads = [] } = useLeads(filters);
   const { data: users = [] } = useUsers();
   const { data: sequences = [] } = useSequences();
   const queryClient = useQueryClient();

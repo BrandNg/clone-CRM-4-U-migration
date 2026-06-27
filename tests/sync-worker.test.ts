@@ -68,8 +68,6 @@ const { pauseSequence } = await import('@/lib/sequences/engine');
 const { isBounceMessage, isAutoReply, extractBouncedRecipient } = await import('@/lib/email/bounceDetection');
 const { EmailService } = await import('@/lib/email/EmailService');
 
-const mockFetchMessagesSince = vi.fn();
-
 describe('handleApplyReply', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 

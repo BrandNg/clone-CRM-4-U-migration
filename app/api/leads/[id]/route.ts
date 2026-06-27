@@ -293,7 +293,7 @@ export async function DELETE(
     if (body?.archiveReason) {
       reason = body.archiveReason;
     }
-  } catch (_) {
+  } catch {
     // Request has no JSON body, ignore
   }
 
