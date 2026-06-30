@@ -40,14 +40,18 @@ Keep database URLs quoted because shell parsing breaks on unquoted `&`.
 
 ## Deploy Commands
 
+Use this path when GitHub Actions has already built and pushed the GHCR image.
+Do not include `docker-compose.build.yml` on EC2 unless you intentionally want
+to build the image on the server.
+
 ```bash
 cd /opt/crm-4-u
 git pull
 npm run prod:check-env
-docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production build web worker
-docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production run --rm --no-deps web npx prisma migrate deploy
-docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production up -d web worker caddy redis
-docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production ps
+docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production pull web worker
+docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production run --rm --no-deps web npx prisma migrate deploy
+docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production up -d web worker caddy redis
+docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production ps
 npm run prod:audit
 ```
 
@@ -82,7 +86,7 @@ Supported roles are `director`, `floor_manager`, `team_lead`, `sdr`, and
 3. Run:
    ```bash
    npm run prod:check-env
-   docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production up -d caddy web worker redis
+   docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production up -d caddy web worker redis
    npm run prod:audit
    ```
 

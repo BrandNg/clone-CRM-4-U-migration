@@ -12,10 +12,10 @@
 ```bash
 cd /opt/crm-4-u
 git pull
-docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production build web worker
-docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production run --rm --no-deps web npx prisma migrate deploy
-docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production up -d web worker caddy redis
-docker compose -f docker-compose.yml -f docker-compose.aws.yml -f docker-compose.build.yml --env-file .env.production ps
+docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production pull web worker
+docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production run --rm --no-deps web npx prisma migrate deploy
+docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production up -d web worker caddy redis
+docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.production ps
 npm run prod:audit
 ```
 
