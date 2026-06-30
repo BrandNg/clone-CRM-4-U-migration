@@ -13,6 +13,9 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
+  turbopack: {
+    root: __dirname,
+  },
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts'],
   },
