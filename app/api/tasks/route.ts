@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
 
-  const parsed = await parseBody(req, createTaskSchema);
+  const parsed = await parseBody(req, createTaskSchema, 'Invalid task create');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

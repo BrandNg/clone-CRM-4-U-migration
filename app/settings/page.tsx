@@ -24,6 +24,7 @@ import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/context/ToastContext';
 import TeamAccountsPanel from '@/components/settings/TeamAccountsPanel';
 import { NOTIF_EVENTS, NOTIF_PREFS_KEY, NOTIF_PREFS_EVENT, readNotifPrefs } from '@/lib/notifications/prefs';
+import { readApiError } from '@/lib/api/client';
 
 interface EmailAccount {
   id: string;
@@ -215,7 +216,7 @@ function SettingsPageInner() {
       if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:profile-updated'));
       showToast('Profile updated successfully!', 'success');
     } else {
-      showToast('Failed to update profile', 'error');
+      showToast(await readApiError(res, 'Failed to update profile'), 'error');
     }
   };
 
@@ -260,8 +261,7 @@ function SettingsPageInner() {
       setMailPassword('');
       showToast(`IMAP/SMTP connected for ${created.email}`, 'success');
     } else {
-      const data = await res.json().catch(() => ({}));
-      showToast(data.error ?? 'Failed to connect IMAP account', 'error');
+      showToast(await readApiError(res, 'Failed to connect IMAP account'), 'error');
     }
   };
 
@@ -298,8 +298,7 @@ function SettingsPageInner() {
       setNewPassword('');
       setConfirmPassword('');
     } else {
-      const data = await res.json().catch(() => ({}));
-      showToast(data.error ?? 'Failed to change password', 'error');
+      showToast(await readApiError(res, 'Failed to change password'), 'error');
     }
   };
 
@@ -329,7 +328,7 @@ function SettingsPageInner() {
       setShowNewUserForm(false);
       showToast(`User ${newUserFirst} created. Temp password: Telestar2026!`, 'success');
     } else {
-      showToast('Failed to create user', 'error');
+      showToast(await readApiError(res, 'Failed to create user'), 'error');
     }
   };
 
@@ -344,7 +343,7 @@ function SettingsPageInner() {
       setAdminUsers((prev) => prev.map((u) => u.id === userId ? { ...u, isActive: false } : u));
       showToast(`${name} deactivated`, 'info');
     } else {
-      showToast('Failed to deactivate user', 'error');
+      showToast(await readApiError(res, 'Failed to deactivate user'), 'error');
     }
   };
 
@@ -380,8 +379,7 @@ function SettingsPageInner() {
       setEditingUserId(null);
       showToast(editPassword ? 'User updated & password reset' : 'User updated', 'success');
     } else {
-      const data = await res.json().catch(() => ({}));
-      showToast(data.error ?? 'Failed to update user', 'error');
+      showToast(await readApiError(res, 'Failed to update user'), 'error');
     }
   };
 
@@ -414,8 +412,7 @@ function SettingsPageInner() {
       setShowNewCampaignForm(false);
       showToast(`Campaign "${created.name}" created`, 'success');
     } else {
-      const data = await res.json().catch(() => ({}));
-      showToast(data.error ?? 'Failed to create campaign', 'error');
+      showToast(await readApiError(res, 'Failed to create campaign'), 'error');
     }
   };
 
@@ -445,8 +442,7 @@ function SettingsPageInner() {
       setEditingCampaignId(null);
       showToast('Campaign updated', 'success');
     } else {
-      const data = await res.json().catch(() => ({}));
-      showToast(data.error ?? 'Failed to update campaign', 'error');
+      showToast(await readApiError(res, 'Failed to update campaign'), 'error');
     }
   };
 

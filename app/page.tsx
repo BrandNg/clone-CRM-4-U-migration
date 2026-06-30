@@ -18,6 +18,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/context/ToastContext';
+import { readApiError } from '@/lib/api/client';
 
 // Slide-over loads on demand — its chunk fetches the first time a task's lead is opened.
 const LeadDetailPanel = dynamic(() => import('@/components/LeadDetailPanel'), { ssr: false });
@@ -288,7 +289,7 @@ export default function DashboardPage() {
       body: JSON.stringify({ stage: 'meeting_booked' }),
     });
     if (res.ok) showToast('Lead moved to Meeting Booked 🎉', 'success');
-    else showToast('Failed to update stage', 'error');
+    else showToast(await readApiError(res, 'Failed to update stage'), 'error');
     setMeetingPrompt(null);
   };
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
+import { readApiError } from '@/lib/api/client';
 
 interface Props {
   onClose: () => void;
@@ -50,7 +51,7 @@ export default function NewLeadModal({ onClose, onSuccess }: Props) {
       onSuccess?.();
       onClose();
     } else {
-      showToast('Failed to create lead', 'error');
+      showToast(await readApiError(res, 'Failed to create lead'), 'error');
     }
   };
 

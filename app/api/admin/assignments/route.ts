@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
 
-  const parsed = await parseBody(req, assignmentSchema);
+  const parsed = await parseBody(req, assignmentSchema, 'Invalid assignment create');
   if (parsed.error) return parsed.error;
   const { userId, campaignId } = parsed.data;
 
@@ -196,7 +196,7 @@ export async function DELETE(req: NextRequest) {
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
 
-  const parsed = await parseBody(req, assignmentSchema);
+  const parsed = await parseBody(req, assignmentSchema, 'Invalid assignment delete');
   if (parsed.error) return parsed.error;
   const { userId, campaignId } = parsed.data;
 

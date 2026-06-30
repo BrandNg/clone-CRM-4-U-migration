@@ -17,6 +17,7 @@ import {
 import Linkedin from '@/components/icons/Linkedin';
 import { useToast } from '@/context/ToastContext';
 import { useAppContext } from '@/context/AppContext';
+import { readApiError } from '@/lib/api/client';
 import MailComposerModal from '@/components/MailComposerModal';
 import dynamic from 'next/dynamic';
 
@@ -305,7 +306,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       });
       setNewNote('');
     } else {
-      showToast('Failed to add note', 'error');
+      showToast(await readApiError(res, 'Failed to add note'), 'error');
     }
   };
 
@@ -346,10 +347,10 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
         setNewReminderText('');
         setNewReminderDate('');
         setShowReminderForm(false);
-        showToast('Reminder set', 'success');
-        window.dispatchEvent(new CustomEvent('crm:reminder-created'));
-      } else {
-        showToast('Failed to create reminder', 'error');
+      showToast('Reminder set', 'success');
+      window.dispatchEvent(new CustomEvent('crm:reminder-created'));
+    } else {
+        showToast(await readApiError(res, 'Failed to create reminder'), 'error');
       }
     } finally {
       setSavingReminder(false);
@@ -366,7 +367,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       setReminders((prev) => prev.filter((r) => r.id !== reminderId));
       window.dispatchEvent(new CustomEvent('crm:notifications-updated'));
     } else {
-      showToast('Failed to dismiss reminder', 'error');
+      showToast(await readApiError(res, 'Failed to dismiss reminder'), 'error');
     }
   };
 
@@ -381,7 +382,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       if (onLeadUpdate) onLeadUpdate({ ...lead, stage: newStage });
       showToast('Stage updated', 'success');
     } else {
-      showToast('Failed to update stage', 'error');
+      showToast(await readApiError(res, 'Failed to update stage'), 'error');
     }
   };
 
@@ -396,7 +397,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       if (onLeadUpdate) onLeadUpdate({ ...lead, priority: newPriority });
       showToast('Priority updated', 'success');
     } else {
-      showToast('Failed to update priority', 'error');
+      showToast(await readApiError(res, 'Failed to update priority'), 'error');
     }
   };
 
@@ -412,7 +413,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
         email: 'Email', phone: 'Call', linkedin: 'LinkedIn', whatsapp: 'WhatsApp',
       };
       const generatedDescription = `${channelLabels[logChannel] || logChannel} activity logged — ${logAction}${logNote ? `: ${logNote}` : ''}`;
-      await fetch('/api/activities', {
+      const res = await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -423,6 +424,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
           metadata: { action: logAction, response_received: logResponse, notes: logNote || undefined },
         }),
       });
+      if (!res.ok) throw new Error(await readApiError(res, 'Failed to log activity'));
       showToast('Activity logged', 'success');
       setAdHocActivities((prev) => [{
         id: Date.now().toString(),
@@ -436,8 +438,8 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       setLogAction('');
       setLogNote('');
       setLogResponse(false);
-    } catch {
-      showToast('Failed to log activity', 'error');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to log activity', 'error');
     } finally {
       setSavingLog(false);
     }
@@ -457,7 +459,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       const actionValue = typeMap[outcome] || 'no_answer';
       const generatedDescription = `Outbound call completed. Outcome: ${outcome}${notes ? `: ${notes}` : ''}`;
       
-      await fetch('/api/activities', {
+      const res = await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -468,6 +470,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
           metadata: { action: actionValue, outcome, notes },
         }),
       });
+      if (!res.ok) throw new Error(await readApiError(res, 'Failed to log call activity'));
 
       showToast('Call logged successfully', 'success');
 
@@ -481,8 +484,8 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       }, ...prev]);
 
       setShowDialer(false);
-    } catch {
-      showToast('Failed to log call activity', 'error');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to log call activity', 'error');
     }
   };
 
@@ -497,7 +500,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       if (onLeadUpdate) onLeadUpdate({ ...lead, _archived: true });
       onClose();
     } else {
-      showToast('Failed to archive lead', 'error');
+      showToast(await readApiError(res, 'Failed to archive lead'), 'error');
     }
   };
 
@@ -533,7 +536,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
         setProfileDraft(null);
         showToast('Profile saved', 'success');
       } else {
-        showToast('Failed to save profile', 'error');
+        showToast(await readApiError(res, 'Failed to save profile'), 'error');
       }
     } finally {
       setSavingProfile(false);
@@ -556,7 +559,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       if (onLeadUpdate) onLeadUpdate({ ...lead, assignedTo });
       showToast('Lead reassigned', 'success');
     } else {
-      showToast('Failed to reassign lead', 'error');
+      showToast(await readApiError(res, 'Failed to reassign lead'), 'error');
     }
   };
 
@@ -584,7 +587,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       setLead((prev) => prev ? { ...prev, sequenceId, sequenceStep: 1, sequenceStatus: 'active', sequence: sequences.find((s) => s.id === sequenceId) ?? prev.sequence } : prev);
       showToast('Lead enrolled in sequence', 'success');
     } else {
-      showToast('Failed to enroll lead', 'error');
+      showToast(await readApiError(res, 'Failed to enroll lead'), 'error');
     }
   };
 
@@ -601,7 +604,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       setLead((prev) => prev ? { ...prev, sequenceId: null, sequenceStep: null, sequenceStatus: null } : prev);
       showToast('Lead unenrolled from sequence', 'success');
     } else {
-      showToast('Failed to unenroll lead', 'error');
+      showToast(await readApiError(res, 'Failed to unenroll lead'), 'error');
     }
   };
 
@@ -629,7 +632,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
       setShowTaskForm(false);
       showToast('Task created!', 'success');
     } else {
-      showToast('Failed to create task', 'error');
+      showToast(await readApiError(res, 'Failed to create task'), 'error');
     }
   };
 

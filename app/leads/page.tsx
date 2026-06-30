@@ -251,8 +251,8 @@ export default function LeadsPage() {
     try {
       await updateStageMutation.mutateAsync({ leadId, stage: colId });
       showToast(`Moved to ${colId.replace(/_/g, ' ')}`, 'success');
-    } catch {
-      showToast('Failed to update stage', 'error');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to update stage', 'error');
     }
   };
 

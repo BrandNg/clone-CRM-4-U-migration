@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { readApiError } from '@/lib/api/client';
 
 export interface Lead {
   id: string;
@@ -56,7 +57,7 @@ export function useLeads(filters: LeadFilters) {
     queryFn: async () => {
       const qs = buildQueryString(filters);
       const res = await fetch(`/api/leads?${qs}`);
-      if (!res.ok) throw new Error('Failed to fetch leads');
+      if (!res.ok) throw new Error(await readApiError(res, 'Failed to fetch leads'));
       const data = await res.json();
       return Array.isArray(data) ? data : [];
     },
@@ -98,7 +99,7 @@ export function useUpdateLeadStage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage }),
       });
-      if (!res.ok) throw new Error('Failed to update stage');
+      if (!res.ok) throw new Error(await readApiError(res, 'Failed to update stage'));
       return res.json();
     },
     onSettled: () => {

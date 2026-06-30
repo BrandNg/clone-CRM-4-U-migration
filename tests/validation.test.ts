@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { capLimit } from '@/lib/validation/core';
+import { capLimit, parseBody } from '@/lib/validation/core';
 import {
   createLeadSchema,
+  updateLeadSchema,
   updateTaskSchema,
   sendEmailSchema,
   createSequenceSchema,
@@ -25,6 +26,41 @@ describe('createLeadSchema', () => {
     expect(createLeadSchema.safeParse({ ...valid, campaignId: undefined }).success).toBe(false);
     expect(createLeadSchema.safeParse({ ...valid, priority: 'urgent' }).success).toBe(false);
     expect(createLeadSchema.safeParse({ ...valid, stage: 'closed' }).success).toBe(false);
+  });
+});
+
+describe('updateLeadSchema', () => {
+  it('accepts all valid stages for existing leads', () => {
+    for (const stage of ['new', 'sequence_active', 'replied', 'meeting_booked', 'won', 'lost']) {
+      expect(updateLeadSchema.safeParse({ stage }).success).toBe(true);
+    }
+  });
+
+  it('normalizes empty optional form fields to null', () => {
+    const result = updateLeadSchema.safeParse({ title: '', phone: '   ', linkedIn: '' });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.title).toBeNull();
+      expect(result.data.phone).toBeNull();
+      expect(result.data.linkedIn).toBeNull();
+    }
+  });
+});
+
+describe('parseBody', () => {
+  it('returns details for validation failures', async () => {
+    const req = new Request('http://test.local', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'not-an-email' }),
+    });
+    const result = await parseBody(req, createLeadSchema, 'Invalid lead create');
+    expect(result.error).toBeDefined();
+    if (result.error) {
+      const body = await result.error.json();
+      expect(body.error).toBe('Invalid lead create');
+      expect(Array.isArray(body.details)).toBe(true);
+      expect(body.details.length).toBeGreaterThan(0);
+    }
   });
 });
 

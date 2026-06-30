@@ -21,7 +21,7 @@ export async function PUT(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const parsed = await parseBody(req, updateReminderSchema);
+  const parsed = await parseBody(req, updateReminderSchema, 'Invalid reminder update');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
 
-  const parsed = await parseBody(req, createCampaignSchema);
+  const parsed = await parseBody(req, createCampaignSchema, 'Invalid campaign create');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

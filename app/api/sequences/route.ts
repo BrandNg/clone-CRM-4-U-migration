@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
 
-  const parsed = await parseBody(req, createSequenceSchema);
+  const parsed = await parseBody(req, createSequenceSchema, 'Invalid sequence create');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

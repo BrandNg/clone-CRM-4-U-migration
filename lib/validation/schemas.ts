@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { id, isoDate, shortText, longText } from './core';
+import { id, isoDate, longText, nullableShortText, nullableLongText, nullableText } from './core';
 
 // Enums mirrored from prisma/schema.prisma — keep in sync with the DB enums.
 export const leadStage = z.enum(['new', 'sequence_active', 'replied', 'meeting_booked', 'won', 'lost']);
@@ -24,15 +24,15 @@ export const createLeadSchema = z.object({
   firstName: z.string().min(1).max(120),
   lastName: z.string().min(1).max(120),
   company: z.string().min(1).max(200),
-  title: shortText.nullish(),
+  title: nullableShortText,
   email: z.string().email().max(320),
-  phone: z.string().max(40).nullish(),
-  linkedIn: z.string().max(500).nullish(),
-  whatsApp: z.string().max(40).nullish(),
+  phone: nullableText(40),
+  linkedIn: nullableText(500),
+  whatsApp: nullableText(40),
   stage: leadStage.optional(),
   assignedToId: id.optional(),
   campaignId: id,
-  source: shortText.nullish(),
+  source: nullableShortText,
   tags: z.array(z.string().max(60)).max(30).optional(),
   priority: priority.optional(),
 }).refine(data => data.stage !== 'sequence_active', {
@@ -44,19 +44,16 @@ export const updateLeadSchema = z.object({
   firstName: z.string().min(1).max(120).optional(),
   lastName: z.string().min(1).max(120).optional(),
   company: z.string().min(1).max(200).optional(),
-  title: shortText.nullish().optional(),
+  title: nullableShortText.optional(),
   email: z.string().email().max(320).optional(),
-  phone: z.string().max(40).nullish().optional(),
-  linkedIn: z.string().max(500).nullish().optional(),
-  whatsApp: z.string().max(40).nullish().optional(),
+  phone: nullableText(40).optional(),
+  linkedIn: nullableText(500).optional(),
+  whatsApp: nullableText(40).optional(),
   stage: leadStage.optional(),
   assignedToId: id.optional(),
   priority: priority.optional(),
   tags: z.array(z.string().max(60)).max(30).optional(),
   lastContactedAt: isoDate.nullish().optional(),
-}).refine(data => data.stage !== 'sequence_active', {
-  message: "Cannot update lead directly to sequence_active stage",
-  path: ['stage'],
 });
 
 // ─── Tasks ───────────────────────────────────────────────────────────────────
@@ -66,7 +63,7 @@ export const createTaskSchema = z.object({
   userId: id.optional(),
   type: taskType,
   title: z.string().min(1).max(300),
-  description: longText.nullish(),
+  description: nullableLongText,
   dueDate: isoDate,
   sequenceId: id.nullish().optional(),
   sequenceStep: z.number().int().min(1).max(100).nullish().optional(),
@@ -76,8 +73,8 @@ export const createTaskSchema = z.object({
 export const updateTaskSchema = z.object({
   status: taskStatus.optional(),
   dueDate: isoDate.optional(),
-  notes: longText.nullish().optional(),
-  outcome: z.string().max(100).nullish().optional(),
+  notes: nullableLongText.optional(),
+  outcome: nullableText(100).optional(),
 });
 
 // ─── Sequences ───────────────────────────────────────────────────────────────
@@ -88,13 +85,13 @@ const sequenceStepSchema = z.object({
   delayDays: z.number().int().min(0).max(365).optional(),
   delayHours: z.number().int().min(0).max(23).optional(),
   templateId: id.nullish().optional(),
-  instructions: longText.nullish().optional(),
+  instructions: nullableLongText.optional(),
   autoComplete: z.boolean().optional(),
 });
 
 export const createSequenceSchema = z.object({
   name: z.string().min(1).max(200),
-  description: longText.nullish().optional(),
+  description: nullableLongText.optional(),
   isActive: z.boolean().optional(),
   steps: z.array(sequenceStepSchema).max(50).optional(),
 });
@@ -108,9 +105,9 @@ export const enrollSchema = z.object({ leadId: id });
 export const createTemplateSchema = z.object({
   name: z.string().min(1).max(200),
   channel,
-  subject: z.string().max(998).nullish().optional(),
+  subject: z.preprocess((value) => (typeof value === 'string' && value.trim() === '' ? null : value), z.string().max(998).nullish()).optional(),
   body: longText.min(1),
-  category: shortText.nullish().optional(),
+  category: nullableShortText.optional(),
 });
 
 export const updateTemplateSchema = createTemplateSchema.partial();
@@ -145,7 +142,7 @@ export const updateUserSchema = z.object({
   firstName: z.string().min(1).max(120).optional(),
   lastName: z.string().min(1).max(120).optional(),
   timezone: z.string().max(60).optional(),
-  avatarUrl: z.string().max(1000).nullish().optional(),
+  avatarUrl: z.preprocess((value) => (typeof value === 'string' && value.trim() === '' ? null : value), z.string().max(1000).nullish()).optional(),
   role: role.optional(),
   managerId: id.nullish().optional(),
   isActive: z.boolean().optional(),
@@ -182,7 +179,7 @@ export const createActivitySchema = z.object({
   sequenceId: id.nullish().optional(),
   type: activityType,
   channel: channel.nullish().optional(),
-  description: shortText.nullish().optional(),
+  description: nullableShortText.optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -190,16 +187,16 @@ export const createCampaignSchema = z.object({
   name: z.string().min(1).max(200),
   clientId: id.optional(),
   newClientName: z.string().min(1).max(200).optional(),
-  targetVertical: shortText.nullish().optional(),
-  targetGeo: shortText.nullish().optional(),
+  targetVertical: nullableShortText.optional(),
+  targetGeo: nullableShortText.optional(),
   status: campaignStatus.optional(),
   startDate: isoDate.optional(),
 });
 
 export const updateCampaignSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  targetVertical: shortText.nullish().optional(),
-  targetGeo: shortText.nullish().optional(),
+  targetVertical: nullableShortText.optional(),
+  targetGeo: nullableShortText.optional(),
   status: campaignStatus.optional(),
 });
 

@@ -44,7 +44,7 @@ export async function PUT(
   const user = userOrRes as SessionUser;
 
   const { id } = await params;
-  const parsed = await parseBody(req, updateSequenceSchema);
+  const parsed = await parseBody(req, updateSequenceSchema, 'Invalid sequence update');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

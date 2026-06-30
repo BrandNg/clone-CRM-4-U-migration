@@ -14,10 +14,20 @@ const DB_RLS_ENFORCED = process.env.DB_RLS_ENFORCED === 'true';
 // Models that actually carry a `tenantId` column. The root `Tenant` model does not, so we
 // must never inject a `tenantId` filter/value for it. Derived from the DMMF so it stays in
 // sync with the schema automatically.
+const FALLBACK_MODELS_WITH_TENANT = [
+  'User', 'Client', 'Campaign', 'CampaignSdr', 'Account', 'Contact', 'Lead',
+  'Sequence', 'SequenceStep', 'Task', 'Template', 'AbTestVariant', 'Note',
+  'Reminder', 'Activity', 'EmailAccount', 'Notification', 'AuditLog', 'JobRun',
+  'OutboundMessage', 'SuppressionEntry', 'SequenceEnrollment', 'ImportBatch',
+  'ImportRow', 'AiMemory',
+];
+const dmmfModels = Prisma.dmmf?.datamodel?.models;
 const MODELS_WITH_TENANT: ReadonlySet<string> = new Set(
-  Prisma.dmmf.datamodel.models
-    .filter((m) => m.fields.some((f) => f.name === 'tenantId'))
-    .map((m) => m.name)
+  dmmfModels
+    ? dmmfModels
+        .filter((m) => m.fields.some((f) => f.name === 'tenantId'))
+        .map((m) => m.name)
+    : FALLBACK_MODELS_WITH_TENANT
 );
 
 const globalForPrisma = globalThis as unknown as { prisma: any };
@@ -47,7 +57,10 @@ function createPrismaClient() {
 
   const log: Prisma.LogLevel[] = process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'];
 
-  const client = new PrismaClient({ datasources: { db: { url: connectionString } }, log });
+  const client = new PrismaClient({
+    ...(connectionString ? { datasources: { db: { url: connectionString } } } : {}),
+    log,
+  });
 
   return client.$extends(auditExtension).$extends({
     query: {

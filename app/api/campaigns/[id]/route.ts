@@ -16,7 +16,7 @@ export async function PUT(
   const user = userOrRes as SessionUser;
 
   const { id } = await params;
-  const parsed = await parseBody(req, updateCampaignSchema);
+  const parsed = await parseBody(req, updateCampaignSchema, 'Invalid campaign update');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useEscapeClose } from '@/hooks/useEscapeClose';
 import { useToast } from '@/context/ToastContext';
+import { readApiError } from '@/lib/api/client';
 
 interface Client {
   id: string;
@@ -72,7 +73,7 @@ export default function NewCampaignModal({ onClose, onSuccess }: Props) {
       onSuccess?.();
       onClose();
     } else {
-      showToast('Failed to create campaign', 'error');
+      showToast(await readApiError(res, 'Failed to create campaign'), 'error');
     }
   };
 

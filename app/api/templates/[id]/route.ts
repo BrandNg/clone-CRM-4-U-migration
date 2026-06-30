@@ -28,7 +28,7 @@ export async function PUT(
   const user = userOrRes as SessionUser;
 
   const { id } = await params;
-  const parsed = await parseBody(req, updateTemplateSchema);
+  const parsed = await parseBody(req, updateTemplateSchema, 'Invalid template update');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

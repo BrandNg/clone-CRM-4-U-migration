@@ -16,7 +16,7 @@ export async function POST(
   const user = userOrRes as SessionUser;
 
   const { id } = await params;
-  const parsed = await parseBody(req, enrollSchema);
+  const parsed = await parseBody(req, enrollSchema, 'Invalid sequence enrollment');
   if (parsed.error) return parsed.error;
   const { leadId } = parsed.data;
 

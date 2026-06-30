@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useEscapeClose } from '@/hooks/useEscapeClose';
+import { readApiError } from '@/lib/api/client';
 
 interface Props {
   onClose: () => void;
@@ -46,7 +47,7 @@ export default function NewTaskModal({ onClose, onSuccess }: Props) {
       onSuccess?.();
       onClose();
     } else {
-      showToast('Failed to create task', 'error');
+      showToast(await readApiError(res, 'Failed to create task'), 'error');
     }
   };
 

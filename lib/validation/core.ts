@@ -14,7 +14,8 @@ export type ParseResult<T> = { data: T; error?: never } | { data?: never; error:
  */
 export async function parseBody<S extends z.ZodType>(
   req: Request,
-  schema: S
+  schema: S,
+  errorMessage = 'Validation failed'
 ): Promise<ParseResult<z.infer<S>>> {
   let raw: unknown;
   try {
@@ -24,14 +25,16 @@ export async function parseBody<S extends z.ZodType>(
   }
   const result = schema.safeParse(raw);
   if (!result.success) {
+    const details = result.error.issues.map((i) => ({
+      path: i.path.join('.'),
+      message: i.message,
+    }));
     return {
       error: NextResponse.json(
         {
-          error: 'Validation failed',
-          issues: result.error.issues.map((i) => ({
-            path: i.path.join('.'),
-            message: i.message,
-          })),
+          error: errorMessage,
+          details,
+          issues: details,
         },
         { status: 400 }
       ),
@@ -50,5 +53,15 @@ export function capLimit(raw: string | null, fallback = 50, max = 200): number {
 // Shared atoms
 export const id = z.string().min(1).max(64);
 export const isoDate = z.coerce.date();
-export const shortText = z.string().max(500);
-export const longText = z.string().max(20_000);
+const emptyStringToNull = (value: unknown) => {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+};
+
+export const shortText = z.string().trim().max(500);
+export const longText = z.string().trim().max(20_000);
+export const nullableShortText = z.preprocess(emptyStringToNull, z.string().max(500).nullish());
+export const nullableLongText = z.preprocess(emptyStringToNull, z.string().max(20_000).nullish());
+export const nullableText = (max: number) =>
+  z.preprocess(emptyStringToNull, z.string().max(max).nullish());

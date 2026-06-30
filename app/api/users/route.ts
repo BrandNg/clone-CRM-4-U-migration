@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   const userOrRes = await requireRole('director');
   if (userOrRes instanceof NextResponse) return userOrRes;
 
-  const parsed = await parseBody(req, createUserSchema);
+  const parsed = await parseBody(req, createUserSchema, 'Invalid user create');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

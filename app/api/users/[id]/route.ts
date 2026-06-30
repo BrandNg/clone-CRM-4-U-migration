@@ -48,7 +48,7 @@ export async function PUT(
   const currentUser = userOrRes as SessionUser;
 
   const { id } = await params;
-  const parsed = await parseBody(req, updateUserSchema);
+  const parsed = await parseBody(req, updateUserSchema, 'Invalid user update');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
 

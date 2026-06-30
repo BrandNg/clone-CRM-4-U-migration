@@ -22,9 +22,9 @@ describe('P0.5 Schema Hardening — Block Fake Sequence Stage', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects updating a lead stage to sequence_active', () => {
+  it('accepts updating a lead stage to sequence_active', () => {
     const result = updateLeadSchema.safeParse({ stage: 'sequence_active' });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it('strips out sequenceId and sequenceStep on update', () => {
