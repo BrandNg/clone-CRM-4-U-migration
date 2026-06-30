@@ -41,7 +41,7 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           set -o pipefail
-          REF_TAG="$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_.-' '-')"
+          REF_TAG="$(printf '%s' "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_.-' '-' | sed 's/^-*//; s/-*$//')"
           TAG_ARGS=(
             --tag "${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA::7}"
             --tag "${REGISTRY}/${IMAGE_NAME}:${REF_TAG}"
