@@ -88,6 +88,7 @@ export interface EmailApplyBouncePayload {
 }
 
 export type ImportResolution = 'skip' | 'update' | 'import';
+export type ImportEmailQualityMode = 'recommended' | 'strict' | 'aggressive';
 
 export interface ImportParsePayload {
   batchId: string;
@@ -99,6 +100,8 @@ export interface ImportParsePayload {
   sequenceId?: string;
   defaultResolution?: ImportResolution;
   resolutions?: Record<string, ImportResolution>;
+  emailQualityMode?: ImportEmailQualityMode;
+  filename?: string;
 }
 
 export interface ImportChunkPayload {

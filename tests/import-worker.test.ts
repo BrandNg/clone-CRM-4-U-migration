@@ -9,6 +9,7 @@ const mockRowUpdate = vi.fn();
 const mockRowUpdateMany = vi.fn();
 const mockRowCount = vi.fn();
 const mockLeadFindMany = vi.fn();
+const mockLeadFindUnique = vi.fn();
 const mockLeadCreate = vi.fn();
 const mockLeadUpdate = vi.fn();
 const mockActivityCreate = vi.fn();
@@ -18,11 +19,35 @@ const mockContactCreate = vi.fn();
 const mockContactUpdate = vi.fn();
 const mockAccountFindUnique = vi.fn();
 const mockAccountCreate = vi.fn();
+const mockAccountUpdate = vi.fn();
 const mockRowCreate = vi.fn();
 const mockRowCreateMany = vi.fn();
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    $transaction: (fn: any) => fn({
+      lead: {
+        findUnique: (...args: unknown[]) => mockLeadFindUnique(...args),
+        create: (...args: unknown[]) => mockLeadCreate(...args),
+        update: (...args: unknown[]) => mockLeadUpdate(...args),
+      },
+      activity: {
+        create: (...args: unknown[]) => mockActivityCreate(...args),
+      },
+      importRow: {
+        update: (...args: unknown[]) => mockRowUpdate(...args),
+      },
+      contact: {
+        findUnique: (...args: unknown[]) => mockContactFindUnique(...args),
+        create: (...args: unknown[]) => mockContactCreate(...args),
+        update: (...args: unknown[]) => mockContactUpdate(...args),
+      },
+      account: {
+        findUnique: (...args: unknown[]) => mockAccountFindUnique(...args),
+        create: (...args: unknown[]) => mockAccountCreate(...args),
+        update: (...args: unknown[]) => mockAccountUpdate(...args),
+      },
+    }),
     importBatch: {
       findUnique: (...args: unknown[]) => mockBatchFindUnique(...args),
       update: (...args: unknown[]) => mockBatchUpdate(...args),
@@ -37,6 +62,7 @@ vi.mock('@/lib/prisma', () => ({
     },
     lead: {
       findMany: (...args: unknown[]) => mockLeadFindMany(...args),
+      findUnique: (...args: unknown[]) => mockLeadFindUnique(...args),
       create: (...args: unknown[]) => mockLeadCreate(...args),
       update: (...args: unknown[]) => mockLeadUpdate(...args),
     },
@@ -54,6 +80,7 @@ vi.mock('@/lib/prisma', () => ({
     account: {
       findUnique: (...args: unknown[]) => mockAccountFindUnique(...args),
       create: (...args: unknown[]) => mockAccountCreate(...args),
+      update: (...args: unknown[]) => mockAccountUpdate(...args),
     },
   },
 }));
@@ -113,7 +140,7 @@ describe('handleImportParse', () => {
   it('validates rows and marks missing name+email as error', async () => {
     mockBatchFindUnique.mockResolvedValue(MOCK_BATCH);
     mockRowFindMany.mockResolvedValue([
-      makeRow('row-1', 1, { firstName: 'John', lastName: 'Doe', email: 'john@test.com' }),
+      makeRow('row-1', 1, { firstName: 'John', lastName: 'Doe', company: 'Acme', email: 'john@test.com' }),
       makeRow('row-2', 2, { firstName: '', lastName: '', email: '' }),
     ]);
     mockLeadFindMany.mockResolvedValue([]);
@@ -123,8 +150,8 @@ describe('handleImportParse', () => {
     expect(mockBatchUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'batch-1' }, data: { status: 'parsing' } })
     );
-    expect(mockRowUpdateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: { in: ['row-2'] } }, data: expect.objectContaining({ status: 'error' }) })
+    expect(mockRowUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'row-2' }, data: expect.objectContaining({ status: 'error' }) })
     );
     expect(result.success).toBe(true);
     expect(result.validationErrors).toBe(1);
@@ -133,11 +160,24 @@ describe('handleImportParse', () => {
   it('detects duplicates by email (scoped dedup)', async () => {
     mockBatchFindUnique.mockResolvedValue(MOCK_BATCH);
     mockRowFindMany.mockResolvedValue([
-      makeRow('row-1', 1, { firstName: 'Jane', lastName: 'Doe', email: 'jane@test.com' }),
+      makeRow('row-1', 1, { firstName: 'Jane', lastName: 'Doe', company: 'Acme', email: 'jane@test.com' }),
     ]);
     mockLeadFindMany.mockResolvedValue([
       { id: 'lead-1', email: 'jane@test.com', firstName: 'Jane', lastName: 'Doe', company: 'Acme', phone: null, title: null },
     ]);
+    mockLeadFindUnique.mockResolvedValue({
+      id: 'lead-1',
+      email: 'jane@test.com',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      company: 'Acme',
+      phone: null,
+      title: null,
+      contactId: null,
+      accountId: null,
+      contact: null,
+      account: null,
+    });
 
     const result = await handleImportParse(BASE_PARSE_PAYLOAD);
 
@@ -179,7 +219,7 @@ describe('handleImportParse', () => {
   it('allows duplicate when resolution is "import"', async () => {
     mockBatchFindUnique.mockResolvedValue(MOCK_BATCH);
     mockRowFindMany.mockResolvedValue([
-      makeRow('row-1', 1, { firstName: 'Jane', lastName: 'Doe', email: 'jane@test.com' }),
+      makeRow('row-1', 1, { firstName: 'Jane', lastName: 'Doe', company: 'Acme', email: 'jane@test.com' }),
     ]);
     mockLeadFindMany.mockResolvedValue([
       { id: 'lead-1', email: 'jane@test.com', firstName: 'Jane', lastName: 'Doe', company: 'Acme', phone: null, title: null },
@@ -197,7 +237,7 @@ describe('handleImportParse', () => {
   it('updates existing lead when resolution is "update"', async () => {
     mockBatchFindUnique.mockResolvedValue(MOCK_BATCH);
     mockRowFindMany.mockResolvedValue([
-      makeRow('row-1', 1, { firstName: 'Jane', lastName: 'Doe', email: 'jane@test.com', title: 'Engineer', phone: '555-0100' }),
+      makeRow('row-1', 1, { firstName: 'Jane', lastName: 'Doe', company: 'Acme', email: 'jane@test.com', title: 'Engineer', phone: '555-0100' }),
     ]);
     mockLeadFindMany.mockResolvedValue([
       { id: 'lead-1', email: 'jane@test.com', firstName: 'Jane', lastName: 'Doe', company: 'Acme', phone: null, title: null },
@@ -217,8 +257,8 @@ describe('handleImportParse', () => {
   it('detects in-batch duplicates', async () => {
     mockBatchFindUnique.mockResolvedValue(MOCK_BATCH);
     mockRowFindMany.mockResolvedValue([
-      makeRow('row-1', 1, { firstName: 'John', lastName: 'Doe', email: 'john@test.com' }),
-      makeRow('row-2', 2, { firstName: 'John', lastName: 'Doe', email: 'john@test.com' }),
+      makeRow('row-1', 1, { firstName: 'John', lastName: 'Doe', company: 'Acme', email: 'john@test.com' }),
+      makeRow('row-2', 2, { firstName: 'John', lastName: 'Doe', company: 'Acme', email: 'john@test.com' }),
     ]);
     mockLeadFindMany.mockResolvedValue([]);
 
@@ -231,7 +271,7 @@ describe('handleImportParse', () => {
   it('enqueues chunk jobs for clean rows', async () => {
     mockBatchFindUnique.mockResolvedValue(MOCK_BATCH);
     const rows = Array.from({ length: 3 }, (_, i) =>
-      makeRow(`row-${i + 1}`, i + 1, { firstName: `F${i}`, lastName: `L${i}`, email: `f${i}@test.com` })
+      makeRow(`row-${i + 1}`, i + 1, { firstName: `F${i}`, lastName: `L${i}`, company: 'Acme', email: `f${i}@test.com` })
     );
     mockRowFindMany.mockResolvedValue(rows);
     mockLeadFindMany.mockResolvedValue([]);
@@ -268,6 +308,7 @@ describe('handleImportChunk', () => {
     vi.clearAllMocks();
     mockAccountFindUnique.mockResolvedValue({ id: 'account-1', name: 'Acme', tenantId: 't1' });
     mockAccountCreate.mockResolvedValue({ id: 'account-1', name: 'Acme', tenantId: 't1' });
+    mockAccountUpdate.mockResolvedValue({ id: 'account-1', name: 'Acme', tenantId: 't1' });
     mockContactFindUnique.mockResolvedValue(null);
     mockContactCreate.mockResolvedValue({ id: 'contact-1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', tenantId: 't1' });
     mockContactUpdate.mockResolvedValue({ id: 'contact-1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', tenantId: 't1' });
@@ -310,7 +351,7 @@ describe('handleImportChunk', () => {
   });
 
   it('updates ImportRow status to imported', async () => {
-    mockRowFindMany.mockResolvedValue([makeRow('row-1', 1, { firstName: 'A', lastName: 'B', email: 'a@b.com' })]);
+    mockRowFindMany.mockResolvedValue([makeRow('row-1', 1, { firstName: 'A', lastName: 'B', company: 'Acme', email: 'a@b.com' })]);
     mockLeadCreate.mockResolvedValue({ id: 'lead-1' });
 
     await handleImportChunk(CHUNK_PAYLOAD);
@@ -321,7 +362,7 @@ describe('handleImportChunk', () => {
   });
 
   it('creates an activity for the imported lead', async () => {
-    mockRowFindMany.mockResolvedValue([makeRow('row-1', 1, { firstName: 'A', lastName: 'B', email: 'a@b.com' })]);
+    mockRowFindMany.mockResolvedValue([makeRow('row-1', 1, { firstName: 'A', lastName: 'B', company: 'Acme', email: 'a@b.com' })]);
     mockLeadCreate.mockResolvedValue({ id: 'lead-1' });
 
     await handleImportChunk(CHUNK_PAYLOAD);
@@ -332,7 +373,7 @@ describe('handleImportChunk', () => {
   });
 
   it('enrolls in sequence when sequenceId is provided', async () => {
-    mockRowFindMany.mockResolvedValue([makeRow('row-1', 1, { firstName: 'A', lastName: 'B', email: 'a@b.com' })]);
+    mockRowFindMany.mockResolvedValue([makeRow('row-1', 1, { firstName: 'A', lastName: 'B', company: 'Acme', email: 'a@b.com' })]);
     mockLeadCreate.mockResolvedValue({ id: 'lead-1' });
     mockSequenceFindUnique.mockResolvedValue({
       id: 'seq-1',
@@ -363,14 +404,15 @@ describe('handleImportCommit', () => {
     mockBatchFindUnique.mockResolvedValue(MOCK_BATCH);
     mockRowCount
       .mockResolvedValueOnce(5)
+      .mockResolvedValueOnce(1)
       .mockResolvedValueOnce(2);
 
     const result = await handleImportCommit({ batchId: 'batch-1' });
 
-    expect(result).toEqual({ success: true, batchId: 'batch-1', imported: 5, errored: 2 });
+    expect(result).toEqual({ success: true, batchId: 'batch-1', imported: 5, updated: 1, errored: 2 });
     expect(mockBatchUpdate).toHaveBeenCalledWith({
       where: { id: 'batch-1' },
-      data: { status: 'committed', parsedRows: 5, errorRows: 2 },
+      data: { status: 'committed', parsedRows: 6, errorRows: 2 },
     });
   });
 

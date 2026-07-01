@@ -22,6 +22,10 @@ export async function GET(req: NextRequest) {
   const assignedTo = searchParams.get('assignedTo') || undefined;
   const campaignId = searchParams.get('campaignId') || undefined;
   const source = searchParams.get('source') || undefined;
+  const importListName = searchParams.get('importListName') || undefined;
+  const emailValidation = searchParams.get('emailValidation') || undefined;
+  const country = searchParams.get('country') || undefined;
+  const industry = searchParams.get('industry') || undefined;
   const tag = searchParams.get('tag') || undefined;
   const dateFrom = searchParams.get('dateFrom') || undefined;
   const dateTo = searchParams.get('dateTo') || undefined;
@@ -53,6 +57,10 @@ export async function GET(req: NextRequest) {
         assignedTo,
         campaignId,
         source,
+        importListName,
+        emailValidation,
+        country,
+        industry,
         tag,
         dateFrom,
         dateTo,
@@ -62,6 +70,32 @@ export async function GET(req: NextRequest) {
       include: {
         assignedTo: { select: { id: true, firstName: true, lastName: true } },
         campaign: { select: { id: true, name: true } },
+        contact: {
+          select: {
+            fullName: true,
+            department: true,
+            seniority: true,
+            country: true,
+            secondaryPhone: true,
+            emailValidation: true,
+            emailScore: true,
+            alternateEmail: true,
+          },
+        },
+        account: {
+          select: {
+            website: true,
+            domain: true,
+            industry: true,
+            country: true,
+            companyPhone: true,
+            linkedIn: true,
+            staffCountRange: true,
+            staffCountMin: true,
+            staffCountMax: true,
+            size: true,
+          },
+        },
         _count: { select: { tasks: true, notes: true } },
         tasks: {
           where: { status: 'pending' },
@@ -169,6 +203,10 @@ export async function POST(req: NextRequest) {
         assignedToId: body.assignedToId ?? user.id,
         campaignId: body.campaignId,
         source: body.source,
+        importListName: body.importListName,
+        emailValidation: body.emailValidation,
+        emailScore: body.emailScore,
+        vendorSource: body.vendorSource,
         tags: body.tags ?? [],
         crmPriorityScore: priority,
         engagementScore: aiScore?.score ?? null,
