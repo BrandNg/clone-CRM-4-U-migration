@@ -53,8 +53,6 @@ services:
   web:
     <<: *app-base
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     command: ["npm", "run", "start"]
@@ -62,8 +60,6 @@ services:
   worker:
     <<: *app-base
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     command: ["npm", "run", "worker:start"]
