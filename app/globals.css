@@ -1,0 +1,378 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ─── TYPOGRAPHY ─── */
+
+
+/* ─── THEME TOKENS ─── */
+:root {
+  /* Brand Accents (Shared across all themes) */
+  --brand-red: #D42B1E;
+  --brand-red-hover: #B71F14;
+  --brand-orange: #E8611A;
+  --brand-orange-hover: #C54E12;
+  --brand-gold: #F5A623;
+  --brand-yellow: #FEDD44;
+  --brand-dark: #0A0A0A;
+  --brand-dark-alt: #1A1A1A;
+
+  /* Channels */
+  --channel-email: #3B82F6;
+  --channel-phone: #22C55E;
+  --channel-linkedin: #6366F1;
+  --channel-whatsapp: #10B981;
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', sans-serif;
+  --font-mono: 'Geist Mono', SFMono-Regular, Consolas, monospace;
+}
+
+/* LIGHT THEME — the only theme. `data-theme="light"` is set statically on <body>
+   so these tokens (and the matching component overrides below) always apply. */
+body[data-theme="light"] {
+  --background: #FFFFFF;
+  --foreground: #111827;
+  --card-bg: #FFFFFF;
+  --card-border: #E5E7EB;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-border: #E5E7EB;
+  --sidebar-text: #111827;
+  --sidebar-text-muted: #6B7280;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --topbar-bg: #FFFFFF;
+  --topbar-border: #E5E7EB;
+  --header-glow: rgba(0, 0, 0, 0.01);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── TAILWIND 4 EXTENSIONS ─── */
+@theme inline {
+  --color-brand-red: var(--brand-red);
+  --color-brand-red-hover: var(--brand-red-hover);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-hover: var(--brand-orange-hover);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-dark: var(--brand-dark);
+  
+  --color-channel-email: var(--channel-email);
+  --color-channel-phone: var(--channel-phone);
+  --color-channel-linkedin: var(--channel-linkedin);
+  --color-channel-whatsapp: var(--channel-whatsapp);
+
+  --color-bg-main: var(--background);
+  --color-text-main: var(--foreground);
+  
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-text-muted: var(--sidebar-text-muted);
+  --color-topbar-bg: var(--topbar-bg);
+  --color-topbar-border: var(--topbar-border);
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+}
+
+/* ─── GLOBAL STYLES ─── */
+html {
+  font-size: 17.5px; /* Increase standard 16px rem base size to make all Tailwind text scaling classes bigger */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 15.5px; /* Increase inherited base font size from 14px to 15.5px */
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* ─── CUSTOM EFFECTS & LAYOUTS ─── */
+.glassmorphism {
+  background: color-mix(in srgb, var(--card-bg) 80%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Glow Effect for HOT leads */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(212, 43, 30, 0.15), 0 0 1px rgba(212, 43, 30, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(212, 43, 30, 0.35), 0 0 3px rgba(212, 43, 30, 0.2);
+  }
+}
+
+.glow-hot {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+  border-color: rgba(212, 43, 30, 0.3) !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.4);
+}
+
+/* Table styling helpers */
+.table-row-dense {
+  height: 38px;
+}
+
+/* ════════════════════════════════════════════
+   UI/UX PRO MAX — KEYFRAMES
+════════════════════════════════════════════ */
+
+@keyframes logo-aurora {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(212,43,30,0.5)) drop-shadow(0 0 12px rgba(232,97,26,0.3)); }
+  33%       { filter: drop-shadow(0 0 8px rgba(232,97,26,0.6)) drop-shadow(0 0 16px rgba(245,166,35,0.3)); }
+  66%       { filter: drop-shadow(0 0 10px rgba(245,166,35,0.5)) drop-shadow(0 0 20px rgba(212,43,30,0.2)); }
+}
+
+@keyframes aurora {
+  0%   { background-position: 0% 50%; }
+  33%  { background-position: 60% 20%; }
+  66%  { background-position: 100% 80%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes stagger-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes beam-rotate {
+  to { --beam-angle: 360deg; }
+}
+
+/* ════════════════════════════════════════════
+   UI/UX PRO MAX — UTILITY CLASSES
+════════════════════════════════════════════ */
+
+.glass-card {
+  background: color-mix(in srgb, var(--card-bg) 75%, transparent);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--card-border) 60%, transparent);
+}
+/* Light mode: solid white cards, no blur — much faster GPU rendering */
+body[data-theme="light"] .glass-card {
+  background: #FFFFFF;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid #E5E7EB;
+}
+/* Light mode: no aurora animation — clean static background */
+body[data-theme="light"] .aurora-bg {
+  background: #F8F9FA;
+  animation: none;
+}
+/* Light mode: replace pulsing glow with a static left accent bar */
+body[data-theme="light"] .glow-hot {
+  animation: none;
+  border-color: rgba(212, 43, 30, 0.4) !important;
+  box-shadow: inset 3px 0 0 var(--brand-red);
+}
+/* Light mode: glass-sidebar becomes solid white */
+body[data-theme="light"] .glass-sidebar {
+  background: var(--sidebar-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.glass-topbar {
+  background: color-mix(in srgb, var(--topbar-bg) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border-bottom: 1px solid color-mix(in srgb, var(--topbar-border) 50%, transparent);
+}
+
+.glass-sidebar {
+  background: color-mix(in srgb, var(--sidebar-bg) 85%, transparent);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+}
+
+.aurora-bg {
+  background: linear-gradient(
+    135deg,
+    var(--background) 0%,
+    color-mix(in srgb, var(--background) 91%, rgba(212,43,30,0.12)) 30%,
+    color-mix(in srgb, var(--background) 93%, rgba(232,97,26,0.10)) 55%,
+    color-mix(in srgb, var(--background) 95%, rgba(245,166,35,0.08)) 80%,
+    var(--background) 100%
+  );
+  background-size: 400% 400%;
+  animation: aurora 14s ease-in-out infinite;
+}
+
+.border-beam-container {
+  position: relative;
+  isolation: isolate;
+}
+.border-beam-container::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--beam-angle, 0deg) at 50% 50%,
+    transparent 0deg,
+    var(--brand-red) 60deg,
+    var(--brand-orange) 120deg,
+    var(--brand-gold) 180deg,
+    transparent 240deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: beam-rotate 3s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.sidebar-beam-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(to bottom, var(--brand-red), var(--brand-orange));
+  box-shadow: 0 0 8px rgba(212,43,30,0.6);
+}
+
+.logo-glow {
+  animation: logo-aurora 4s ease-in-out infinite;
+}
+
+.hover-lift {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+}
+
+.page-hero {
+  position: relative;
+  overflow: hidden;
+}
+.page-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -60px;
+  width: 280px; height: 160px;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--brand-red) 10%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(28px);
+}
+.page-hero::after {
+  content: '';
+  position: absolute;
+  top: -20px; right: 60px;
+  width: 180px; height: 100px;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--brand-gold) 8%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(36px);
+}
+
+.stagger-container > .stagger-child {
+  animation: stagger-fade-up 0.38s ease-out both;
+}
+.stagger-container > .stagger-child:nth-child(1)  { animation-delay: 0ms; }
+.stagger-container > .stagger-child:nth-child(2)  { animation-delay: 70ms; }
+.stagger-container > .stagger-child:nth-child(3)  { animation-delay: 140ms; }
+.stagger-container > .stagger-child:nth-child(4)  { animation-delay: 210ms; }
+.stagger-container > .stagger-child:nth-child(5)  { animation-delay: 280ms; }
+.stagger-container > .stagger-child:nth-child(6)  { animation-delay: 350ms; }
+.stagger-container > .stagger-child:nth-child(7)  { animation-delay: 420ms; }
+.stagger-container > .stagger-child:nth-child(8)  { animation-delay: 490ms; }
+.stagger-container > .stagger-child:nth-child(n+9){ animation-delay: 490ms; }
+
+.focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+.focus-ring:focus-visible {
+  outline-color: var(--brand-red);
+}
+
+/* ─── KANBAN CARD HELPERS ─── */
+/* Small colored dot for stage column headers */
+.stage-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* XS SDR avatar circle in lead cards */
+.avatar-xs {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ─── SIDEBAR TRANSITION ─── */
+.sidebar-transition {
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── TOAST COUNTDOWN BAR ─── */
+/* Compositor-driven width countdown — replaces a 30ms JS interval per toast */
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+.toast-progress {
+  width: 100%;
+  transform-origin: left;
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}

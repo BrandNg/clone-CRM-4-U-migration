@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telestar SDR CRM — Pitch Deck</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --dark:   #0A0A0A;
+      --dark2:  #1A1A1A;
+      --dark3:  #2A2A2A;
+      --red:    #D42B1E;
+      --orange: #E8611A;
+      --gold:   #F5A623;
+      --yellow: #FEDD44;
+      --white:  #FFFFFF;
+      --gray:   #8A8A8A;
+      --light:  #F5F5F5;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--dark);
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ─── NAV ─────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #222;
+    }
+    .nav-logo {
+      font-size: 18px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--red), var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .nav-dots { display: flex; gap: 8px; }
+    .nav-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #333; cursor: pointer; transition: background .2s;
+    }
+    .nav-dot.active { background: var(--red); }
+
+    /* ─── SLIDES ──────────────────────────────────────────── */
+    .slide {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 100px 60px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide-inner { max-width: 1100px; width: 100%; }
+
+    /* ─── SLIDE 1: HERO ───────────────────────────────────── */
+    #s1 {
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, #1a0800 0%, var(--dark) 70%);
+    }
+    .hero-eyebrow {
+      font-size: 12px; font-weight: 700; letter-spacing: 3px;
+      color: var(--orange); text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero-title {
+      font-size: clamp(48px, 7vw, 88px);
+      font-weight: 900; line-height: 1;
+      letter-spacing: -3px; margin-bottom: 24px;
+    }
+    .hero-title .accent {
+      background: linear-gradient(135deg, var(--red) 0%, var(--orange) 50%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: 20px; color: #aaa; max-width: 580px;
+      line-height: 1.6; margin-bottom: 48px;
+    }
+    .hero-stats {
+      display: flex; gap: 48px; flex-wrap: wrap;
+    }
+    .stat-block { display: flex; flex-direction: column; gap: 4px; }
+    .stat-num {
+      font-size: 40px; font-weight: 800; letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--red), var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat-label { font-size: 12px; color: var(--gray); letter-spacing: 1px; text-transform: uppercase; }
+
+    .hero-flame {
+      position: absolute; right: -80px; top: 50%; transform: translateY(-50%);
+      font-size: 320px; opacity: 0.04; user-select: none;
+    }
+
+    /* ─── SLIDE 2: PROBLEM ────────────────────────────────── */
+    #s2 { background: #0D0D0D; }
+    .slide-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 3px;
+      color: var(--red); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .slide-heading {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800; letter-spacing: -1.5px;
+      line-height: 1.1; margin-bottom: 48px;
+    }
+    .slide-heading .red { color: var(--red); }
+    .slide-heading .gold { color: var(--gold); }
+
+    .problem-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    }
+    .problem-card {
+      background: #141414; border: 1px solid #222;
+      border-radius: 12px; padding: 28px 24px;
+      transition: border-color .2s;
+    }
+    .problem-card:hover { border-color: var(--red); }
+    .problem-icon { font-size: 32px; margin-bottom: 16px; }
+    .problem-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+    .problem-card p { font-size: 14px; color: #777; line-height: 1.6; }
+
+    /* ─── SLIDE 3: SOLUTION ───────────────────────────────── */
+    #s3 {
+      background: radial-gradient(ellipse 60% 50% at 50% 100%, #1a0500 0%, #0D0D0D 70%);
+    }
+    .solution-split {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+    }
+    .solution-list { display: flex; flex-direction: column; gap: 20px; margin-top: 32px; }
+    .solution-item {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: #141414; border: 1px solid #222;
+      border-radius: 10px; padding: 20px;
+    }
+    .sol-icon {
+      width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .sol-icon.red-bg { background: rgba(212,43,30,0.15); }
+    .sol-icon.orange-bg { background: rgba(232,97,26,0.15); }
+    .sol-icon.gold-bg { background: rgba(245,166,35,0.15); }
+    .sol-text h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .sol-text p { font-size: 13px; color: #666; line-height: 1.5; }
+
+    .mockup-box {
+      background: #141414; border: 1px solid #2a2a2a;
+      border-radius: 16px; overflow: hidden;
+    }
+    .mockup-bar {
+      background: #0A0A0A; padding: 12px 16px;
+      display: flex; gap: 6px; align-items: center;
+      border-bottom: 1px solid #222;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #FF5F57; }
+    .dot-y { background: #FFBD2E; }
+    .dot-g { background: #28CA41; }
+    .mockup-body { padding: 0; }
+    .mockup-sidebar {
+      display: flex; height: 320px;
+    }
+    .m-sidebar {
+      width: 56px; background: #0A0A0A;
+      border-right: 1px solid #1a1a1a;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 0; gap: 20px;
+    }
+    .m-icon { font-size: 16px; opacity: 0.5; cursor: pointer; }
+    .m-icon.active { opacity: 1; }
+    .m-content { flex: 1; background: #111; padding: 16px; overflow: hidden; }
+    .m-stage-row {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px;
+    }
+    .m-stage {
+      background: #1a1a1a; border-radius: 6px; padding: 8px 6px;
+      font-size: 9px; color: #555; text-align: center; font-weight: 600;
+    }
+    .m-stage.blue { border-top: 2px solid #3B82F6; color: #3B82F6; }
+    .m-stage.amber { border-top: 2px solid var(--gold); color: var(--gold); }
+    .m-stage.green { border-top: 2px solid #22C55E; color: #22C55E; }
+    .m-stage.red { border-top: 2px solid var(--red); color: var(--red); }
+    .m-card {
+      background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 6px;
+      padding: 8px 10px; margin-bottom: 6px;
+    }
+    .m-card-name { font-size: 10px; font-weight: 600; margin-bottom: 2px; }
+    .m-card-sub { font-size: 9px; color: #555; }
+    .m-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 3px;
+      font-size: 8px; font-weight: 700; margin-top: 4px;
+    }
+    .badge-hot { background: rgba(212,43,30,0.2); color: var(--red); }
+    .badge-warm { background: rgba(245,166,35,0.2); color: var(--gold); }
+
+    /* ─── SLIDE 4: MODULES ────────────────────────────────── */
+    #s4 { background: #0D0D0D; }
+    .modules-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px;
+    }
+    .module-card {
+      background: #141414; border: 1px solid #222; border-radius: 12px;
+      padding: 28px 24px; position: relative; overflow: hidden;
+    }
+    .module-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .module-card.m-dashboard::before { background: linear-gradient(90deg, var(--red), var(--orange)); }
+    .module-card.m-leads::before { background: linear-gradient(90deg, #3B82F6, #6366F1); }
+    .module-card.m-sequences::before { background: linear-gradient(90deg, var(--orange), var(--gold)); }
+    .module-card.m-templates::before { background: linear-gradient(90deg, #8B5CF6, #EC4899); }
+    .module-card.m-team::before { background: linear-gradient(90deg, #22C55E, #14B8A6); }
+    .module-card.m-settings::before { background: linear-gradient(90deg, var(--gray), #555); }
+    .module-emoji { font-size: 28px; margin-bottom: 14px; }
+    .module-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .module-card .route {
+      font-size: 11px; font-family: 'Courier New', monospace;
+      color: var(--orange); margin-bottom: 12px;
+    }
+    .module-card p { font-size: 13px; color: #666; line-height: 1.6; }
+    .module-features { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .feature-tag {
+      background: #1e1e1e; border: 1px solid #2a2a2a;
+      border-radius: 4px; padding: 3px 8px;
+      font-size: 11px; color: #777;
+    }
+
+    /* ─── SLIDE 5: PIPELINE ───────────────────────────────── */
+    #s5 { background: #0A0A0A; }
+    .pipeline-flow {
+      display: flex; align-items: center; gap: 0; margin: 40px 0;
+      overflow-x: auto; padding-bottom: 8px;
+    }
+    .pipeline-stage {
+      flex: 1; min-width: 140px; text-align: center;
+      padding: 24px 16px; background: #141414;
+      border: 1px solid #222; position: relative;
+    }
+    .pipeline-stage:first-child { border-radius: 12px 0 0 12px; }
+    .pipeline-stage:last-child { border-radius: 0 12px 12px 0; }
+    .pipeline-stage::after {
+      content: '→'; position: absolute; right: -14px; top: 50%;
+      transform: translateY(-50%); font-size: 18px; color: #333; z-index: 10;
+    }
+    .pipeline-stage:last-child::after { display: none; }
+    .ps-dot { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto 10px; }
+    .ps-dot.gray { background: #555; }
+    .ps-dot.blue { background: #3B82F6; }
+    .ps-dot.amber { background: var(--gold); }
+    .ps-dot.emerald { background: #22C55E; }
+    .ps-dot.green { background: #16A34A; }
+    .ps-label { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .ps-count { font-size: 22px; font-weight: 800; }
+    .ps-sub { font-size: 11px; color: #555; margin-top: 2px; }
+
+    .channels-row {
+      display: flex; gap: 16px; margin-top: 40px; flex-wrap: wrap;
+    }
+    .channel-pill {
+      display: flex; align-items: center; gap: 10px;
+      background: #141414; border: 1px solid #222;
+      border-radius: 100px; padding: 12px 20px;
+    }
+    .ch-icon { font-size: 18px; }
+    .ch-name { font-size: 14px; font-weight: 600; }
+    .ch-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+    .ch-email .ch-tag { background: rgba(59,130,246,0.15); color: #3B82F6; }
+    .ch-phone .ch-tag { background: rgba(34,197,94,0.15); color: #22C55E; }
+    .ch-linkedin .ch-tag { background: rgba(99,102,241,0.15); color: #818CF8; }
+    .ch-whatsapp .ch-tag { background: rgba(20,184,166,0.15); color: #14B8A6; }
+
+    /* ─── SLIDE 6: TEAM & ROLES ───────────────────────────── */
+    #s6 { background: #0D0D0D; }
+    .org-chart {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0; margin: 40px 0;
+    }
+    .org-row { display: flex; gap: 16px; justify-content: center; }
+    .org-node {
+      background: #141414; border: 1px solid #2a2a2a;
+      border-radius: 10px; padding: 16px 20px; text-align: center;
+      min-width: 120px;
+    }
+    .org-node.top { border-color: var(--red); }
+    .org-node.mgr { border-color: var(--orange); }
+    .org-node.tl { border-color: var(--gold); }
+    .org-node.sdr { border-color: #333; }
+    .org-role { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gray); margin-bottom: 4px; }
+    .org-count { font-size: 22px; font-weight: 800; }
+    .org-connector {
+      width: 1px; height: 24px; background: #333; margin: 0 auto;
+    }
+    .org-connector-h {
+      display: flex; align-items: center; gap: 0;
+    }
+    .access-table { width: 100%; border-collapse: collapse; margin-top: 40px; }
+    .access-table th {
+      background: #141414; padding: 12px 16px; text-align: left;
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--gray);
+      border-bottom: 1px solid #222;
+    }
+    .access-table td {
+      padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #1a1a1a;
+    }
+    .access-table tr:hover td { background: #141414; }
+    .check { color: #22C55E; font-weight: 700; }
+    .cross { color: #555; }
+    .partial { color: var(--gold); font-weight: 700; }
+
+    /* ─── SLIDE 7: TECH STACK ─────────────────────────────── */
+    #s7 {
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, #0a0800 0%, var(--dark) 70%);
+    }
+    .stack-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px;
+    }
+    .stack-item {
+      background: #141414; border: 1px solid #222;
+      border-radius: 10px; padding: 20px;
+      text-align: center;
+    }
+    .stack-emoji { font-size: 28px; margin-bottom: 10px; }
+    .stack-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .stack-role { font-size: 12px; color: #555; }
+
+    .integration-row {
+      display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap;
+    }
+    .int-badge {
+      background: #141414; border: 1px solid #222;
+      border-radius: 6px; padding: 8px 14px;
+      font-size: 12px; color: #888;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .int-badge.future { border-style: dashed; color: #555; }
+    .int-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; }
+    .int-dot.future-dot { background: #555; }
+
+    /* ─── SLIDE 8: ROADMAP ────────────────────────────────── */
+    #s8 { background: #0D0D0D; }
+    .roadmap { display: flex; flex-direction: column; gap: 0; margin-top: 40px; }
+    .roadmap-phase {
+      display: grid; grid-template-columns: 140px 1fr; gap: 0;
+    }
+    .phase-left {
+      display: flex; flex-direction: column; align-items: center; padding: 0 32px 0 0;
+    }
+    .phase-circle {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; flex-shrink: 0;
+    }
+    .phase-circle.p1 { background: var(--red); color: var(--white); }
+    .phase-circle.p2 { background: var(--orange); color: var(--white); }
+    .phase-circle.p3 { background: var(--gold); color: var(--dark); }
+    .phase-circle.p4 { background: #333; color: var(--white); }
+    .phase-line { width: 1px; flex: 1; background: #222; margin: 8px 0; min-height: 40px; }
+    .phase-right { padding: 4px 0 40px; }
+    .phase-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--orange); margin-bottom: 6px;
+    }
+    .phase-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .phase-items { display: flex; flex-wrap: wrap; gap: 8px; }
+    .phase-item {
+      background: #141414; border: 1px solid #222;
+      border-radius: 6px; padding: 5px 12px;
+      font-size: 12px; color: #777;
+    }
+
+    /* ─── SLIDE 9: CTA ────────────────────────────────────── */
+    #s9 {
+      background: radial-gradient(ellipse 80% 70% at 50% 50%, #1a0500 0%, var(--dark) 70%);
+      text-align: center;
+    }
+    .cta-tag {
+      display: inline-block; background: rgba(212,43,30,0.15);
+      border: 1px solid rgba(212,43,30,0.3); border-radius: 100px;
+      padding: 8px 20px; font-size: 12px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--red);
+      margin-bottom: 32px;
+    }
+    .cta-title {
+      font-size: clamp(40px, 6vw, 76px);
+      font-weight: 900; letter-spacing: -2px; line-height: 1.05;
+      margin-bottom: 24px;
+    }
+    .cta-sub { font-size: 18px; color: #777; max-width: 560px; margin: 0 auto 48px; line-height: 1.7; }
+    .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 16px 36px; border-radius: 8px;
+      font-size: 15px; font-weight: 700; letter-spacing: 0.3px;
+      cursor: pointer; border: none; text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--red), var(--orange));
+      color: var(--white);
+    }
+    .btn-secondary {
+      background: transparent; color: var(--white);
+      border: 1px solid #333;
+    }
+
+    /* ─── FOOTER NAV ──────────────────────────────────────── */
+    footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 40px; background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid #1a1a1a; font-size: 12px; color: #444;
+    }
+    .slide-counter { font-family: 'Courier New', monospace; }
+    .footer-btns { display: flex; gap: 8px; }
+    .footer-btn {
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 6px; padding: 6px 14px;
+      color: #888; font-size: 12px; cursor: pointer;
+      transition: all .15s;
+    }
+    .footer-btn:hover { background: #222; color: var(--white); }
+
+    /* ─── DIVIDER ──────────────────────────────────────────── */
+    .divider { width: 48px; height: 2px; background: var(--red); margin: 20px 0 36px; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">★ TELESTAR</div>
+  <div class="nav-dots" id="nav-dots"></div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 1 — HERO
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s1">
+  <div class="slide-inner">
+    <div class="hero-eyebrow">SDR-as-a-Service · BPO Platform</div>
+    <h1 class="hero-title">
+      The Operating System<br>
+      for <span class="accent">Elite SDR Teams</span>
+    </h1>
+    <p class="hero-sub">
+      Telestar SDR CRM is a purpose-built command center for BPO sales development —
+      replacing spreadsheets, disconnected inboxes, and missed follow-ups with one
+      fast, intelligent workspace.
+    </p>
+    <div class="hero-stats">
+      <div class="stat-block">
+        <span class="stat-num">12</span>
+        <span class="stat-label">Active SDRs</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-num">4</span>
+        <span class="stat-label">Outreach Channels</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-num">5</span>
+        <span class="stat-label">Pipeline Stages</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-num">∞</span>
+        <span class="stat-label">Campaigns</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-flame">★</div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s2">
+  <div class="slide-inner">
+    <div class="slide-label">The Problem</div>
+    <h2 class="slide-heading">SDR teams are <span class="red">drowning</span><br>in tool chaos</h2>
+    <div class="divider"></div>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">📊</div>
+        <h3>Scattered Lead Data</h3>
+        <p>Lead lists live in Excel sheets. Each SDR tracks their own pipeline differently. No single source of truth — data integrity breaks the moment a rep joins or leaves.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🔀</div>
+        <h3>Multi-Tool Fragmentation</h3>
+        <p>Gmail, Outlook, LinkedIn, WhatsApp, VoIP — all separate. SDRs context-switch constantly, losing momentum and dropping follow-ups between the gaps.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🚨</div>
+        <h3>Zero Visibility for Managers</h3>
+        <p>Floor Managers can't see which reps are overdue, which leads are stalled, or how sequences are performing — until it's too late to course-correct.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">⏱️</div>
+        <h3>Manual Sequence Tracking</h3>
+        <p>Follow-up cadences live in people's heads or spreadsheets. Missed steps mean missed opportunities — and there's no way to know until a lead goes cold.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🔄</div>
+        <h3>Repetitive Manual Work</h3>
+        <p>SDRs retype the same outreach messages daily. No template library. No merge fields. Every email and LinkedIn message is composed from scratch.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📉</div>
+        <h3>No Client Reporting</h3>
+        <p>Generating client performance reports requires manually aggregating data from multiple sources. Hours of work for a single weekly update.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 3 — THE SOLUTION
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s3">
+  <div class="slide-inner">
+    <div class="solution-split">
+      <div>
+        <div class="slide-label">The Solution</div>
+        <h2 class="slide-heading">One platform.<br><span class="gold">Every channel.</span><br>Full visibility.</h2>
+        <div class="divider"></div>
+        <div class="solution-list">
+          <div class="solution-item">
+            <div class="sol-icon red-bg">🎯</div>
+            <div class="sol-text">
+              <h4>Unified Lead Pipeline</h4>
+              <p>Kanban board and list view with drag-and-drop stage management. Every lead, every stage, every SDR — one source of truth.</p>
+            </div>
+          </div>
+          <div class="solution-item">
+            <div class="sol-icon orange-bg">⚡</div>
+            <div class="sol-text">
+              <h4>Automated Sequence Engine</h4>
+              <p>Build multi-step, multi-channel cadences once. The platform tracks where every lead is and fires tasks automatically.</p>
+            </div>
+          </div>
+          <div class="solution-item">
+            <div class="sol-icon gold-bg">📈</div>
+            <div class="sol-text">
+              <h4>Real-Time Manager Dashboard</h4>
+              <p>Activity leaderboards, overdue alerts, pipeline funnels, and one-click client report exports.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mockup-box">
+          <div class="mockup-bar">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+            <span style="font-size:11px;color:#555;margin-left:12px;font-family:monospace;">telestar-crm.app</span>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-sidebar">
+              <div class="m-sidebar">
+                <div class="m-icon active">★</div>
+                <div class="m-icon">⊞</div>
+                <div class="m-icon active" style="color:#D42B1E;">◈</div>
+                <div class="m-icon">≡</div>
+                <div class="m-icon">◧</div>
+                <div class="m-icon">⚙</div>
+              </div>
+              <div class="m-content">
+                <div style="font-size:10px;color:#555;margin-bottom:10px;font-weight:700;letter-spacing:1px;">LEADS PIPELINE</div>
+                <div class="m-stage-row">
+                  <div class="m-stage">New<br><strong style="color:#aaa">48</strong></div>
+                  <div class="m-stage blue">Active<br><strong>31</strong></div>
+                  <div class="m-stage amber">Replied<br><strong>12</strong></div>
+                  <div class="m-stage green">Booked<br><strong>8</strong></div>
+                  <div class="m-stage red">Won<br><strong>5</strong></div>
+                </div>
+                <div style="font-size:10px;color:#555;margin-bottom:8px;font-weight:700;letter-spacing:1px;">SEQUENCE ACTIVE</div>
+                <div class="m-card">
+                  <div class="m-card-name">Sarah Chen · Acme Corp</div>
+                  <div class="m-card-sub">Step 2 of 6 · Email · Due today</div>
+                  <span class="m-badge badge-hot">🔥 HOT</span>
+                </div>
+                <div class="m-card">
+                  <div class="m-card-name">James Okafor · TechVault</div>
+                  <div class="m-card-sub">Step 4 of 6 · Call · Due today</div>
+                  <span class="m-badge badge-warm">WARM</span>
+                </div>
+                <div class="m-card">
+                  <div class="m-card-name">Maria Santos · Nexus AI</div>
+                  <div class="m-card-sub">Step 1 of 5 · LinkedIn · Due today</div>
+                  <span class="m-badge badge-warm">WARM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 4 — MODULES
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s4">
+  <div class="slide-inner">
+    <div class="slide-label">Product</div>
+    <h2 class="slide-heading">Six modules.<br>One <span class="gold">daily OS.</span></h2>
+    <div class="modules-grid">
+      <div class="module-card m-dashboard">
+        <div class="module-emoji">📋</div>
+        <h3>Dashboard</h3>
+        <div class="route">/</div>
+        <p>The SDR's daily starting point. Today · Yesterday · Overdue tabs. Every task, every lead, every channel in one prioritized view.</p>
+        <div class="module-features">
+          <span class="feature-tag">Task queue</span>
+          <span class="feature-tag">Personal stats</span>
+          <span class="feature-tag">Overdue alerts</span>
+        </div>
+      </div>
+      <div class="module-card m-leads">
+        <div class="module-emoji">👥</div>
+        <h3>Leads</h3>
+        <div class="route">/leads</div>
+        <p>Kanban + list pipeline. Drag-and-drop stages. Lead detail slide-over with full history, notes, tasks, and reminders.</p>
+        <div class="module-features">
+          <span class="feature-tag">Kanban board</span>
+          <span class="feature-tag">Table view</span>
+          <span class="feature-tag">Bulk actions</span>
+        </div>
+      </div>
+      <div class="module-card m-sequences">
+        <div class="module-emoji">⚡</div>
+        <h3>Sequences</h3>
+        <div class="route">/sequences</div>
+        <p>Visual multi-channel cadence builder. Drag-and-drop step ordering. Auto-enrollment, auto-unenrollment, and progress tracking.</p>
+        <div class="module-features">
+          <span class="feature-tag">Step builder</span>
+          <span class="feature-tag">Auto-advance</span>
+          <span class="feature-tag">Enrollment</span>
+        </div>
+      </div>
+      <div class="module-card m-templates">
+        <div class="module-emoji">✍️</div>
+        <h3>Templates</h3>
+        <div class="route">/templates</div>
+        <p>Email, LinkedIn, WhatsApp template library. Merge fields for personalization. Live preview before sending.</p>
+        <div class="module-features">
+          <span class="feature-tag">Merge fields</span>
+          <span class="feature-tag">Live preview</span>
+          <span class="feature-tag">All channels</span>
+        </div>
+      </div>
+      <div class="module-card m-team">
+        <div class="module-emoji">📊</div>
+        <h3>Team View</h3>
+        <div class="route">/team</div>
+        <p>Manager-only dashboard. Activity leaderboard, pipeline funnel, overdue alerts, sequence performance, and client report export.</p>
+        <div class="module-features">
+          <span class="feature-tag">Leaderboard</span>
+          <span class="feature-tag">Funnel chart</span>
+          <span class="feature-tag">CSV export</span>
+        </div>
+      </div>
+      <div class="module-card m-settings">
+        <div class="module-emoji">⚙️</div>
+        <h3>Settings</h3>
+        <div class="route">/settings</div>
+        <p>Email account connections (Gmail OAuth, Outlook, IMAP/SMTP). User management, client &amp; campaign setup, role assignments.</p>
+        <div class="module-features">
+          <span class="feature-tag">Multi-email</span>
+          <span class="feature-tag">Role mgmt</span>
+          <span class="feature-tag">Campaigns</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 5 — PIPELINE & CHANNELS
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s5">
+  <div class="slide-inner">
+    <div class="slide-label">Pipeline & Channels</div>
+    <h2 class="slide-heading">Every lead. Every channel.<br><span class="gold">Always tracked.</span></h2>
+    <div class="divider"></div>
+
+    <div class="pipeline-flow">
+      <div class="pipeline-stage">
+        <div class="ps-dot gray"></div>
+        <div class="ps-label" style="color:#888">NEW</div>
+        <div class="ps-count" style="color:#888">48</div>
+        <div class="ps-sub">Imported</div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="ps-dot blue"></div>
+        <div class="ps-label" style="color:#3B82F6">SEQUENCE ACTIVE</div>
+        <div class="ps-count" style="color:#3B82F6">31</div>
+        <div class="ps-sub">In cadence</div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="ps-dot amber"></div>
+        <div class="ps-label" style="color:#F5A623">REPLIED</div>
+        <div class="ps-count" style="color:#F5A623">12</div>
+        <div class="ps-sub">Engaged</div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="ps-dot emerald"></div>
+        <div class="ps-label" style="color:#22C55E">MEETING BOOKED</div>
+        <div class="ps-count" style="color:#22C55E">8</div>
+        <div class="ps-sub">Converted</div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="ps-dot green"></div>
+        <div class="ps-label" style="color:#16A34A">WON / LOST</div>
+        <div class="ps-count" style="color:#16A34A">5 / 2</div>
+        <div class="ps-sub">Closed</div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px">
+      <div class="slide-label">Outreach Channels</div>
+      <div class="channels-row">
+        <div class="channel-pill ch-email">
+          <span class="ch-icon">📧</span>
+          <span class="ch-name">Email</span>
+          <span class="ch-tag">Gmail · Outlook · IMAP</span>
+        </div>
+        <div class="channel-pill ch-phone">
+          <span class="ch-icon">📞</span>
+          <span class="ch-name">Phone</span>
+          <span class="ch-tag">VoIP · Click-to-dial</span>
+        </div>
+        <div class="channel-pill ch-linkedin">
+          <span class="ch-icon">💼</span>
+          <span class="ch-name">LinkedIn</span>
+          <span class="ch-tag">InMail · Connect</span>
+        </div>
+        <div class="channel-pill ch-whatsapp">
+          <span class="ch-icon">💬</span>
+          <span class="ch-name">WhatsApp</span>
+          <span class="ch-tag">Direct messaging</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 6 — TEAM & ROLES
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s6">
+  <div class="slide-inner">
+    <div class="slide-label">Team & Access</div>
+    <h2 class="slide-heading">Built for <span class="red">hierarchy.</span><br>Scoped by role.</h2>
+    <div class="divider"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start">
+      <div class="org-chart">
+        <div class="org-row">
+          <div class="org-node top">
+            <div class="org-role">Director / BD</div>
+            <div class="org-count">1</div>
+          </div>
+        </div>
+        <div class="org-connector"></div>
+        <div class="org-row">
+          <div class="org-node mgr">
+            <div class="org-role">Floor Managers</div>
+            <div class="org-count">2</div>
+          </div>
+        </div>
+        <div class="org-connector"></div>
+        <div class="org-row">
+          <div class="org-node tl">
+            <div class="org-role">Team Leads</div>
+            <div class="org-count">7</div>
+          </div>
+        </div>
+        <div class="org-connector"></div>
+        <div class="org-row">
+          <div class="org-node sdr">
+            <div class="org-role">SDRs</div>
+            <div class="org-count">12</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <table class="access-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>SDR</th>
+              <th>Team Lead</th>
+              <th>Manager+</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Own leads & tasks</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>Pod pipeline view</td>
+              <td class="cross">—</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>Full team dashboard</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>Activity leaderboard</td>
+              <td class="cross">—</td>
+              <td class="partial">Pod only</td>
+              <td class="check">✓ All</td>
+            </tr>
+            <tr>
+              <td>Client report export</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>User management</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+              <td class="partial">Director only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 7 — TECH STACK
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s7">
+  <div class="slide-inner">
+    <div class="slide-label">Technology</div>
+    <h2 class="slide-heading">Production-grade stack.<br><span class="gold">Built to scale.</span></h2>
+    <div class="divider"></div>
+
+    <div class="stack-grid">
+      <div class="stack-item">
+        <div class="stack-emoji">▲</div>
+        <div class="stack-name">Next.js</div>
+        <div class="stack-role">Fullstack framework</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-emoji">🐘</div>
+        <div class="stack-name">PostgreSQL</div>
+        <div class="stack-role">Database</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-emoji">⚡</div>
+        <div class="stack-name">Supabase</div>
+        <div class="stack-role">Hosted DB + Auth</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-emoji">🎨</div>
+        <div class="stack-name">Tailwind CSS</div>
+        <div class="stack-role">UI styling</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-emoji">🗄️</div>
+        <div class="stack-name">Prisma</div>
+        <div class="stack-role">ORM + migrations</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-emoji">⚛️</div>
+        <div class="stack-name">React</div>
+        <div class="stack-role">UI components</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-emoji">📊</div>
+        <div class="stack-name">Recharts</div>
+        <div class="stack-role">Data visualization</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-emoji">🔐</div>
+        <div class="stack-name">NextAuth</div>
+        <div class="stack-role">Authentication</div>
+      </div>
+    </div>
+
+    <div style="margin-top:40px">
+      <div style="font-size:11px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;font-weight:700;">INTEGRATIONS — LIVE &amp; PLANNED</div>
+      <div class="integration-row">
+        <div class="int-badge"><div class="int-dot"></div> Gmail OAuth</div>
+        <div class="int-badge"><div class="int-dot"></div> Outlook / Graph API</div>
+        <div class="int-badge"><div class="int-dot"></div> IMAP / SMTP</div>
+        <div class="int-badge future"><div class="int-dot future-dot"></div> Apollo Enrichment</div>
+        <div class="int-badge future"><div class="int-dot future-dot"></div> Google Calendar</div>
+        <div class="int-badge future"><div class="int-dot future-dot"></div> VoIP Click-to-call</div>
+        <div class="int-badge future"><div class="int-dot future-dot"></div> Telegram Notifications</div>
+        <div class="int-badge future"><div class="int-dot future-dot"></div> LinkedIn Sales Nav</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 8 — ROADMAP
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s8">
+  <div class="slide-inner">
+    <div class="slide-label">Roadmap</div>
+    <h2 class="slide-heading">Ship fast.<br><span class="red">Iterate daily.</span></h2>
+    <div class="divider"></div>
+
+    <div class="roadmap">
+      <div class="roadmap-phase">
+        <div class="phase-left">
+          <div class="phase-circle p1">1</div>
+          <div class="phase-line"></div>
+        </div>
+        <div class="phase-right">
+          <div class="phase-label">Phase 1 — MVP Core</div>
+          <div class="phase-title">The Daily Workspace</div>
+          <div class="phase-items">
+            <span class="phase-item">Lead pipeline (Kanban + List)</span>
+            <span class="phase-item">Task dashboard</span>
+            <span class="phase-item">Sequence builder</span>
+            <span class="phase-item">Template library</span>
+            <span class="phase-item">Lead detail slide-over</span>
+            <span class="phase-item">Notes & reminders</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-phase">
+        <div class="phase-left">
+          <div class="phase-circle p2">2</div>
+          <div class="phase-line"></div>
+        </div>
+        <div class="phase-right">
+          <div class="phase-label">Phase 2 — Team Intelligence</div>
+          <div class="phase-title">Manager Dashboard & Reporting</div>
+          <div class="phase-items">
+            <span class="phase-item">Activity leaderboard</span>
+            <span class="phase-item">Pipeline funnel charts</span>
+            <span class="phase-item">Overdue alerts</span>
+            <span class="phase-item">Client report export (CSV/PDF)</span>
+            <span class="phase-item">Role-scoped views</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-phase">
+        <div class="phase-left">
+          <div class="phase-circle p3">3</div>
+          <div class="phase-line"></div>
+        </div>
+        <div class="phase-right">
+          <div class="phase-label">Phase 3 — Integrations</div>
+          <div class="phase-title">Email, Calendar & Enrichment</div>
+          <div class="phase-items">
+            <span class="phase-item">Gmail OAuth</span>
+            <span class="phase-item">Outlook / Graph API</span>
+            <span class="phase-item">Google Calendar sync</span>
+            <span class="phase-item">Apollo lead enrichment</span>
+            <span class="phase-item">VoIP click-to-call</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-phase">
+        <div class="phase-left">
+          <div class="phase-circle p4">4</div>
+        </div>
+        <div class="phase-right">
+          <div class="phase-label">Phase 4 — Scale & AI</div>
+          <div class="phase-title">AI-Assisted SDR + Multi-Client Scale</div>
+          <div class="phase-items">
+            <span class="phase-item">AI reply suggestions</span>
+            <span class="phase-item">Lead scoring</span>
+            <span class="phase-item">Telegram notifications</span>
+            <span class="phase-item">Supabase Realtime</span>
+            <span class="phase-item">Multi-client management</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     SLIDE 9 — CTA
+════════════════════════════════════════════════════════ -->
+<section class="slide" id="s9">
+  <div class="slide-inner" style="display:flex;flex-direction:column;align-items:center;">
+    <div class="cta-tag">★ Built by Telestar · For Telestar</div>
+    <h2 class="cta-title">
+      Replace the<br>
+      <span style="background:linear-gradient(135deg,var(--red),var(--orange),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+        spreadsheets.
+      </span>
+    </h2>
+    <p class="cta-sub">
+      Telestar SDR CRM is the single operating system that lets every SDR execute
+      faster, every manager coach smarter, and every client see results.
+    </p>
+    <div style="display:flex;gap:48px;margin-bottom:56px;flex-wrap:wrap;justify-content:center">
+      <div style="text-align:center">
+        <div style="font-size:36px;font-weight:800;color:var(--red)">12</div>
+        <div style="font-size:12px;color:#555;text-transform:uppercase;letter-spacing:1px">SDRs Empowered</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:36px;font-weight:800;color:var(--orange)">4</div>
+        <div style="font-size:12px;color:#555;text-transform:uppercase;letter-spacing:1px">Channels Unified</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:36px;font-weight:800;color:var(--gold)">0</div>
+        <div style="font-size:12px;color:#555;text-transform:uppercase;letter-spacing:1px">Leads Dropped</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;font-size:13px;color:#333;letter-spacing:1px">
+      TELESTAR · SDR-AS-A-SERVICE · GLOBAL BPO
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="slide-counter" id="slide-counter">01 / 09</div>
+  <div class="footer-btns">
+    <button class="footer-btn" id="prev-btn">← Prev</button>
+    <button class="footer-btn" id="next-btn">Next →</button>
+  </div>
+</footer>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  const navDots = document.getElementById('nav-dots');
+  const counter = document.getElementById('slide-counter');
+
+  // build dots
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    navDots.appendChild(d);
+  }
+
+  function goTo(idx) {
+    current = Math.max(0, Math.min(total - 1, idx));
+    slides[current].scrollIntoView({ behavior: 'smooth' });
+    document.querySelectorAll('.nav-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+    counter.textContent =
+      String(current + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+  }
+
+  document.getElementById('prev-btn').addEventListener('click', () => goTo(current - 1));
+  document.getElementById('next-btn').addEventListener('click', () => goTo(current + 1));
+
+  // keyboard nav
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
+  });
+
+  // update counter on manual scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = Array.from(slides).indexOf(entry.target);
+        current = idx;
+        document.querySelectorAll('.nav-dot').forEach((d, i) => {
+          d.classList.toggle('active', i === idx);
+        });
+        counter.textContent =
+          String(idx + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

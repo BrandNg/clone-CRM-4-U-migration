@@ -1,0 +1,11 @@
+x-app-build: &app-build
+  build:
+    context: .
+    dockerfile: Dockerfile
+
+services:
+  web:
+    <<: *app-build
+
+  worker:
+    <<: *app-build

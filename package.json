@@ -1,0 +1,69 @@
+{
+  "name": "telestar-sdr-crm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "eslint app components lib context tests",
+    "test": "vitest run",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "create-admin": "tsx scripts/create-admin.ts",
+    "create-user": "tsx scripts/create-user.ts",
+    "list-users": "tsx scripts/list-users.ts",
+    "prod:check-env": "tsx scripts/prod-check-env.ts",
+    "prod:audit": "tsx scripts/prod-audit.ts",
+    "analyze": "ANALYZE=true next build",
+    "worker:dev": "node scripts/worker-dev.cjs",
+    "worker:start": "node scripts/worker-start.cjs",
+    "worker:healthcheck": "tsx -e \"require('dotenv').config(); const {enqueue,JobType}=require('./lib/bullmq'); enqueue(JobType.MAINTENANCE_HEALTHCHECK,{startedAt:new Date().toISOString()}).then(id=>console.log('enqueued',id)).catch(console.error)\""
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@next/bundle-analyzer": "^16.2.9",
+    "@prisma/client": "^6.2.1",
+    "@tanstack/react-query": "^5.101.1",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^5.79.1",
+    "googleapis": "^173.0.0",
+    "groq-sdk": "^1.2.1",
+    "imapflow": "^1.4.3",
+    "ioredis": "^5.11.1",
+    "lucide-react": "^1.17.0",
+    "next": "^16.2.9",
+    "next-auth": "^5.0.0-beta.31",
+    "nodemailer": "^9.0.1",
+    "prisma": "^6.2.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "read-excel-file": "^9.2.0",
+    "recharts": "^3.8.1",
+    "sip.js": "^0.21.2",
+    "tsx": "^4.22.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/nodemailer": "^8.0.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16.2.9",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.8"
+  }
+}
