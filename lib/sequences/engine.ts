@@ -107,6 +107,10 @@ export async function advanceSequence(
       where: { id: lead.id },
       data: { sequenceId: null, sequenceStep: null, sequenceStatus: null },
     });
+    await prisma.sequenceEnrollment.updateMany({
+      where: { leadId: lead.id, sequenceId: task.sequenceId, status: { in: ['active', 'paused'] } },
+      data: { status: 'completed', completedAt: new Date() },
+    });
     await prisma.activity.create({
       data: {
         userId: actorUserId,
@@ -133,6 +137,11 @@ export async function advanceSequence(
   await prisma.lead.update({
     where: { id: lead.id, sequenceStep: lead.sequenceStep },
     data: { sequenceStep: nextStepOrder },
+  });
+
+  await prisma.sequenceEnrollment.updateMany({
+    where: { leadId: lead.id, sequenceId: task.sequenceId, status: 'active' },
+    data: { currentStep: nextStepOrder },
   });
 
   const nextStep = sequence.steps.find((s) => s.order === nextStepOrder);
@@ -170,6 +179,11 @@ export async function pauseSequence(
     data: { sequenceStatus: 'paused' },
   });
 
+  await prisma.sequenceEnrollment.updateMany({
+    where: { leadId, sequenceId: lead.sequenceId, status: 'active' },
+    data: { status: 'paused' },
+  });
+
   await prisma.task.updateMany({
     where: { leadId, sequenceId: lead.sequenceId, status: 'pending' },
     data: { status: 'skipped' },
@@ -205,5 +219,9 @@ export async function unenrollLead(leadId: string, sequenceId: string): Promise<
   await prisma.task.updateMany({
     where: { leadId, sequenceId, status: 'pending' },
     data: { status: 'skipped' },
+  });
+  await prisma.sequenceEnrollment.updateMany({
+    where: { leadId, sequenceId, status: { in: ['active', 'paused'] } },
+    data: { status: 'unenrolled', completedAt: new Date() },
   });
 }

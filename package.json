@@ -16,6 +16,8 @@
     "create-admin": "tsx scripts/create-admin.ts",
     "create-user": "tsx scripts/create-user.ts",
     "list-users": "tsx scripts/list-users.ts",
+    "encrypt-existing-tokens": "tsx scripts/encrypt-existing-tokens.ts",
+    "sync-enrollments": "tsx scripts/sync-sequence-enrollments.ts",
     "prod:check-env": "tsx scripts/prod-check-env.ts",
     "prod:audit": "tsx scripts/prod-audit.ts",
     "analyze": "ANALYZE=true next build",
