@@ -20,15 +20,15 @@ import {
 } from '@/lib/auth';
 
 describe('canImportExport', () => {
-  it('allows director, floor_manager, and leadgen roles', () => {
+  it('allows director, floor_manager, leadgen, and sdr roles', () => {
     expect(canImportExport('director')).toBe(true);
     expect(canImportExport('floor_manager')).toBe(true);
     expect(canImportExport('leadgen')).toBe(true);
+    expect(canImportExport('sdr')).toBe(true);
   });
 
-  it('rejects team_lead and sdr roles', () => {
+  it('rejects team_lead role', () => {
     expect(canImportExport('team_lead')).toBe(false);
-    expect(canImportExport('sdr')).toBe(false);
   });
 });
 
