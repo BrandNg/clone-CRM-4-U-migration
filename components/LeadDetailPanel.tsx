@@ -36,6 +36,10 @@ interface LeadDetail {
   stage: 'new' | 'sequence_active' | 'replied' | 'meeting_booked' | 'won' | 'lost';
   priority: 'hot' | 'warm' | 'cold';
   source?: string;
+  importListName?: string | null;
+  emailValidation?: string | null;
+  emailScore?: number | null;
+  vendorSource?: string | null;
   tags: string[];
   lastContactedAt?: string;
   sequenceId?: string | null;
@@ -45,6 +49,26 @@ interface LeadDetail {
   notes?: NoteItem[];
   tasks?: TaskItem[];
   assignedTo?: { id: string; firstName: string; lastName: string } | null;
+  contact?: {
+    fullName?: string | null;
+    department?: string | null;
+    seniority?: string | null;
+    country?: string | null;
+    secondaryPhone?: string | null;
+    emailValidation?: string | null;
+    emailScore?: number | null;
+    alternateEmail?: string | null;
+  } | null;
+  account?: {
+    website?: string | null;
+    domain?: string | null;
+    industry?: string | null;
+    country?: string | null;
+    companyPhone?: string | null;
+    linkedIn?: string | null;
+    staffCountRange?: string | null;
+    size?: number | null;
+  } | null;
   aiScore?: number;
   aiLabel?: 'hot' | 'warm' | 'cold';
   aiInsights?: string[];
@@ -952,6 +976,51 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
                   </div>
                 )}
               </div>
+
+              {(lead.emailValidation || lead.emailScore != null || lead.importListName || lead.contact || lead.account) && (
+                <div className="bg-background/40 border border-card-border rounded-xl p-4 space-y-3.5">
+                  <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider font-mono">Enrichment Data</h3>
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase font-mono">Email Quality</span>
+                      <span className="text-text-primary font-medium">
+                        {lead.emailValidation || lead.contact?.emailValidation || 'N/A'}
+                        {(lead.emailScore ?? lead.contact?.emailScore) !== undefined && (lead.emailScore ?? lead.contact?.emailScore) !== null
+                          ? ` / ${lead.emailScore ?? lead.contact?.emailScore}`
+                          : ''}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase font-mono">Import List</span>
+                      <span className="text-text-primary font-medium">{lead.importListName || lead.vendorSource || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase font-mono">Department</span>
+                      <span className="text-text-primary font-medium">{lead.contact?.department || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase font-mono">Seniority</span>
+                      <span className="text-text-primary font-medium">{lead.contact?.seniority || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase font-mono">Contact Country</span>
+                      <span className="text-text-primary font-medium">{lead.contact?.country || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase font-mono">Industry</span>
+                      <span className="text-text-primary font-medium">{lead.account?.industry || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase font-mono">Company Country</span>
+                      <span className="text-text-primary font-medium">{lead.account?.country || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-muted block text-[10px] uppercase font-mono">Staff Range</span>
+                      <span className="text-text-primary font-medium">{lead.account?.staffCountRange || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {lead.sequenceStatus === 'active' && lead.sequence && (
                 <div className="bg-background/40 border border-card-border rounded-xl p-4 space-y-3">

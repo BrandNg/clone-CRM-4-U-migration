@@ -15,6 +15,10 @@ export interface Lead {
   stage: 'new' | 'sequence_active' | 'replied' | 'meeting_booked' | 'won' | 'lost';
   priority: 'hot' | 'warm' | 'cold';
   source?: string;
+  importListName?: string | null;
+  emailValidation?: string | null;
+  emailScore?: number | null;
+  vendorSource?: string | null;
   lastContactedAt?: string;
   nextTaskDue?: string;
   nextTaskType?: string | null;
@@ -22,6 +26,28 @@ export interface Lead {
   atRisk?: boolean;
   tags?: string[];
   assignedTo?: { id: string; firstName: string; lastName: string };
+  contact?: {
+    fullName?: string | null;
+    department?: string | null;
+    seniority?: string | null;
+    country?: string | null;
+    secondaryPhone?: string | null;
+    emailValidation?: string | null;
+    emailScore?: number | null;
+    alternateEmail?: string | null;
+  } | null;
+  account?: {
+    website?: string | null;
+    domain?: string | null;
+    industry?: string | null;
+    country?: string | null;
+    companyPhone?: string | null;
+    linkedIn?: string | null;
+    staffCountRange?: string | null;
+    staffCountMin?: number | null;
+    staffCountMax?: number | null;
+    size?: number | null;
+  } | null;
   aiScore?: number;
   aiLabel?: 'hot' | 'warm' | 'cold';
   aiRecommendation?: string;
@@ -33,6 +59,10 @@ interface LeadFilters {
   priority?: string;
   assignedTo?: string;
   source?: string;
+  importListName?: string;
+  emailValidation?: string;
+  country?: string;
+  industry?: string;
   tag?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -45,6 +75,10 @@ function buildQueryString(filters: LeadFilters): string {
   if (filters.priority && filters.priority !== 'all') params.set('priority', filters.priority);
   if (filters.assignedTo && filters.assignedTo !== 'all') params.set('assignedTo', filters.assignedTo);
   if (filters.source) params.set('source', filters.source);
+  if (filters.importListName) params.set('importListName', filters.importListName);
+  if (filters.emailValidation && filters.emailValidation !== 'all') params.set('emailValidation', filters.emailValidation);
+  if (filters.country) params.set('country', filters.country);
+  if (filters.industry) params.set('industry', filters.industry);
   if (filters.tag) params.set('tag', filters.tag);
   if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
   if (filters.dateTo) params.set('dateTo', filters.dateTo);

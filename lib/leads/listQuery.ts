@@ -8,6 +8,10 @@ export interface LeadListFilters {
   assignedTo?: string;
   campaignId?: string;
   source?: string;
+  importListName?: string;
+  emailValidation?: string;
+  country?: string;
+  industry?: string;
   tag?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -39,6 +43,19 @@ export function buildLeadListWhere(
   if (filters.assignedTo) clauses.push({ assignedToId: filters.assignedTo });
   if (filters.campaignId) clauses.push({ campaignId: filters.campaignId });
   if (filters.source) clauses.push({ source: { contains: filters.source, mode: 'insensitive' } });
+  if (filters.importListName) clauses.push({ importListName: { contains: filters.importListName, mode: 'insensitive' } });
+  if (filters.emailValidation) clauses.push({ emailValidation: filters.emailValidation });
+  if (filters.country) {
+    clauses.push({
+      OR: [
+        { contact: { country: { contains: filters.country, mode: 'insensitive' } } },
+        { account: { country: { contains: filters.country, mode: 'insensitive' } } },
+      ],
+    });
+  }
+  if (filters.industry) {
+    clauses.push({ account: { industry: { contains: filters.industry, mode: 'insensitive' } } });
+  }
   if (filters.tag) clauses.push({ tags: { has: filters.tag } });
 
   if (filters.dateFrom || filters.dateTo) {

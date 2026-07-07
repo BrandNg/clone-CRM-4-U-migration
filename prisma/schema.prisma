@@ -206,6 +206,12 @@ model Account {
   website   String?
   linkedIn  String?
   size      Int?
+  country   String?
+  companyPhone String?
+  staffCountRange String?
+  staffCountMin   Int?
+  staffCountMax   Int?
+  domain          String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tenantId  String
@@ -215,20 +221,31 @@ model Account {
 
   @@unique([tenantId, name])
   @@index([tenantId])
+  @@index([tenantId, industry])
+  @@index([tenantId, country])
 }
 
 // ─── Contact (person-level) — Premium Data Model (P8) ───────────────────────
 
 model Contact {
   id              String   @id @default(cuid())
+  fullName        String?
   firstName       String
   lastName        String
   company         String
   title           String?
+  department      String?
+  seniority       String?
+  country         String?
   email           String
   phone           String?
+  secondaryPhone  String?
   linkedIn        String?
   whatsApp        String?
+  emailValidation String?
+  emailScore      Int?
+  alternateEmail  String?
+  alternateEmailValidation String?
   normalizedEmail    String?
   normalizedPhone    String?
   normalizedLinkedIn String?
@@ -241,6 +258,8 @@ model Contact {
 
   @@unique([tenantId, normalizedEmail])
   @@index([tenantId])
+  @@index([tenantId, country])
+  @@index([tenantId, emailValidation])
 }
 
 // ─── Leads (assignment-level) — Premium Data Model (P8) ─────────────────────
@@ -271,6 +290,10 @@ model Lead {
   timezone        String?
   emailInvalid    Boolean   @default(false)
   source          String?
+  importListName  String?
+  emailValidation String?
+  emailScore      Int?
+  vendorSource    String?
   tags            String[]
   crmPriorityScore Priority  @default(warm)
   engagementScore Int?
@@ -314,6 +337,7 @@ model Lead {
   @@index([campaignId, assignedToId])
   @@index([tenantId, archivedAt])
   @@index([tenantId, campaignId, normalizedEmail])
+  @@index([tenantId, importListName])
 }
 
 // ─── Sequences ───────────────────────────────────────────────────────────────

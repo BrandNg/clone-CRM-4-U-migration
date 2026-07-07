@@ -177,6 +177,10 @@ export default function LeadsPage() {
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [sdrFilter, setSdrFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('');
+  const [importListFilter, setImportListFilter] = useState<string>('');
+  const [emailValidationFilter, setEmailValidationFilter] = useState<string>('all');
+  const [countryFilter, setCountryFilter] = useState<string>('');
+  const [industryFilter, setIndustryFilter] = useState<string>('');
   const [tagFilter, setTagFilter] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
@@ -196,6 +200,10 @@ export default function LeadsPage() {
     priority: priorityFilter,
     assignedTo: sdrFilter,
     source: sourceFilter || undefined,
+    importListName: importListFilter || undefined,
+    emailValidation: emailValidationFilter,
+    country: countryFilter || undefined,
+    industry: industryFilter || undefined,
     tag: tagFilter || undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
@@ -385,14 +393,28 @@ export default function LeadsPage() {
 
   const sdrUsers = users.filter((u) => u.role === 'sdr');
 
-  const anyExtraFilter = sdrFilter !== 'all' || sourceFilter || tagFilter || dateFrom || dateTo;
-  const extraFilterCount = [sdrFilter !== 'all', !!sourceFilter, !!tagFilter, !!dateFrom, !!dateTo].filter(Boolean).length;
+  const anyExtraFilter = sdrFilter !== 'all' || sourceFilter || importListFilter || emailValidationFilter !== 'all' || countryFilter || industryFilter || tagFilter || dateFrom || dateTo;
+  const extraFilterCount = [
+    sdrFilter !== 'all',
+    !!sourceFilter,
+    !!importListFilter,
+    emailValidationFilter !== 'all',
+    !!countryFilter,
+    !!industryFilter,
+    !!tagFilter,
+    !!dateFrom,
+    !!dateTo,
+  ].filter(Boolean).length;
   const clearAllFilters = () => {
     setPriorityFilter('all');
     setStageFilter('all');
     setSdrFilter('all');
     setSearchQuery('');
     setSourceFilter('');
+    setImportListFilter('');
+    setEmailValidationFilter('all');
+    setCountryFilter('');
+    setIndustryFilter('');
     setTagFilter('');
     setDateFrom('');
     setDateTo('');
@@ -550,6 +572,38 @@ export default function LeadsPage() {
               placeholder="Source…"
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
+              className="bg-background border border-card-border rounded-lg text-xs px-2.5 py-1.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-brand-red w-28"
+            />
+            <input
+              type="text"
+              placeholder="Import list..."
+              value={importListFilter}
+              onChange={(e) => setImportListFilter(e.target.value)}
+              className="bg-background border border-card-border rounded-lg text-xs px-2.5 py-1.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-brand-red w-32"
+            />
+            <select
+              value={emailValidationFilter}
+              onChange={(e) => setEmailValidationFilter(e.target.value)}
+              className="bg-background border border-card-border rounded-lg text-xs px-2.5 py-1.5 text-text-primary focus:outline-none focus:border-brand-red cursor-pointer"
+            >
+              <option value="all">All Email Quality</option>
+              <option value="deliverable">Deliverable</option>
+              <option value="risky">Risky</option>
+              <option value="unknown">Unknown</option>
+              <option value="undeliverable">Undeliverable</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Country..."
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              className="bg-background border border-card-border rounded-lg text-xs px-2.5 py-1.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-brand-red w-28"
+            />
+            <input
+              type="text"
+              placeholder="Industry..."
+              value={industryFilter}
+              onChange={(e) => setIndustryFilter(e.target.value)}
               className="bg-background border border-card-border rounded-lg text-xs px-2.5 py-1.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-brand-red w-28"
             />
             <input

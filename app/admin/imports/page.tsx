@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Upload, ChevronRight, X, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
 import { useToast } from '@/context/ToastContext';
 
 interface ImportBatch {
@@ -91,6 +92,8 @@ export default function ImportsAdminPage() {
       case 'committed':
         return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
       case 'committing':
+      case 'parsed':
+      case 'parsing':
         return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
       case 'failed':
         return 'bg-brand-red/10 text-brand-red border-brand-red/20';
@@ -98,6 +101,24 @@ export default function ImportsAdminPage() {
       default:
         return 'bg-gray-500/10 text-text-muted border-card-border';
     }
+  };
+
+  const downloadErrorRows = () => {
+    if (!batchDetail) return;
+    const rows = batchDetail.importRows.filter((row) => row.status === 'error');
+    const csv = [
+      'row,status,reason',
+      ...rows.map((row) => {
+        const reason = ((row.errors as any)?.reason || JSON.stringify(row.errors || {})).replace(/"/g, '""');
+        return `${row.rowIndex},${row.status},"${reason}"`;
+      }),
+    ].join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `import-errors-${batchDetail.id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -229,7 +250,18 @@ export default function ImportsAdminPage() {
 
                   {/* Rows List */}
                   <div className="space-y-2">
-                    <p className="text-[10px] font-bold font-mono text-text-muted uppercase tracking-wider">Row Validation Log</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[10px] font-bold font-mono text-text-muted uppercase tracking-wider">Row Validation Log</p>
+                      {batchDetail.importRows.some((row) => row.status === 'error') && (
+                        <button
+                          type="button"
+                          onClick={downloadErrorRows}
+                          className="text-[10px] font-semibold text-brand-red hover:underline font-mono"
+                        >
+                          Download Errors
+                        </button>
+                      )}
+                    </div>
                     <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                       {batchDetail.importRows.length === 0 ? (
                         <p className="text-xs text-text-muted italic">No rows recorded in database logs.</p>
@@ -238,7 +270,7 @@ export default function ImportsAdminPage() {
                           <div
                             key={row.id}
                             className={`rounded-xl border p-3 flex items-start justify-between gap-3 text-xs ${
-                              row.status === 'imported'
+                              row.status === 'imported' || row.status === 'updated'
                                 ? 'bg-emerald-500/[0.02] border-emerald-500/10'
                                 : 'bg-brand-red/[0.02] border-brand-red/10'
                             }`}
@@ -251,6 +283,15 @@ export default function ImportsAdminPage() {
                                 {row.data?.email || 'No email'} · {row.data?.company || 'No company'}
                               </p>
 
+                              {row.leadId && (
+                                <Link
+                                  href={`/leads/${row.leadId}`}
+                                  className="text-[10px] font-mono text-brand-orange hover:underline mt-1 inline-block"
+                                >
+                                  Open lead
+                                </Link>
+                              )}
+
                               {row.errors && (
                                 <p className="text-[10px] font-mono text-brand-red mt-1.5 leading-relaxed bg-brand-red/[0.04] rounded-lg p-2 border border-brand-red/10 flex items-start gap-1">
                                   <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -259,9 +300,9 @@ export default function ImportsAdminPage() {
                               )}
                             </div>
                             <div>
-                              {row.status === 'imported' ? (
+                              {row.status === 'imported' || row.status === 'updated' ? (
                                 <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[9px] font-bold border border-emerald-500/20 rounded font-mono flex items-center gap-0.5 whitespace-nowrap">
-                                  <CheckCircle className="w-3 h-3" /> IMPORTED
+                                  <CheckCircle className="w-3 h-3" /> {row.status.toUpperCase()}
                                 </span>
                               ) : (
                                 <span className="px-2 py-0.5 bg-brand-red/10 text-brand-red text-[9px] font-bold border border-brand-red/20 rounded font-mono flex items-center gap-0.5 whitespace-nowrap">

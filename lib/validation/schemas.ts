@@ -33,6 +33,10 @@ export const createLeadSchema = z.object({
   assignedToId: id.optional(),
   campaignId: id,
   source: nullableShortText,
+  importListName: nullableShortText.optional(),
+  emailValidation: nullableShortText.optional(),
+  emailScore: z.number().int().min(0).max(100).nullish().optional(),
+  vendorSource: nullableShortText.optional(),
   tags: z.array(z.string().max(60)).max(30).optional(),
   priority: priority.optional(),
 }).refine(data => data.stage !== 'sequence_active', {

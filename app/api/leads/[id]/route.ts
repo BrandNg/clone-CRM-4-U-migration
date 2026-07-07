@@ -22,6 +22,8 @@ export async function GET(
     include: {
       assignedTo: { select: { id: true, firstName: true, lastName: true, role: true } },
       campaign: { select: { id: true, name: true, client: { select: { id: true, name: true } } } },
+      contact: true,
+      account: true,
       sequence: { select: { id: true, name: true, steps: { orderBy: { order: 'asc' } } } },
       tasks: { orderBy: { dueDate: 'asc' }, take: 50 },
       notes: {
