@@ -1317,7 +1317,7 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {task.status === 'pending' && task.type === 'email' && task.sequenceStep != null && new Date(task.dueDate) > new Date() && (
+                        {task.status === 'pending' && task.type === 'email' && task.sequenceStep != null && (
                           <button
                             onClick={() => handleRunNow(task.id)}
                             disabled={runningTask === task.id}
