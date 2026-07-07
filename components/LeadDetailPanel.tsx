@@ -1623,6 +1623,8 @@ export default function LeadDetailPanel({ leadId, onClose, onLeadUpdate }: LeadD
             title: lead.title ?? '',
             email: lead.email,
             phone: lead.phone ?? undefined,
+            sequenceId: lead.sequenceId ?? undefined,
+            sequenceStep: lead.sequenceStep ?? undefined,
           }}
           onClose={() => setShowComposer(false)}
           onSent={() => {

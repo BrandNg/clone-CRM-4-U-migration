@@ -248,7 +248,22 @@ export async function handleExecuteTask(payload: SequenceExecuteTaskPayload) {
     leadEmail;
 
   if (!eligible || !stepInfo?.template || !leadEmail) {
-    return { status: 'skipped', reason: 'lead_ineligible_or_paused' };
+    // Dead-end prevention: If it failed because of missing template, notify user and leave it pending (manual)
+    if (stepInfo && !stepInfo.template && leadEmail) {
+      await prisma.notification.create({
+        data: {
+          userId: task.lead.assignedToId,
+          type: 'sequence_error',
+          title: 'Auto-send Failed: Missing Template',
+          text: `Sequence step is missing an email template. Cannot auto-send to ${task.lead.firstName} ${task.lead.lastName}. Please send manually.`,
+          linkTo: `/leads/${task.lead.id}`,
+          tenantId: task.tenantId,
+        }
+      });
+      // Fallback to manual by essentially just leaving it pending, but we should make sure it doesn't loop.
+      // Wait, BullMQ job will complete with 'skipped' and not loop. The task stays pending for the user.
+    }
+    return { status: 'skipped', reason: 'lead_ineligible_or_paused_or_missing_template' };
   }
   const template = stepInfo.template;
 
@@ -256,7 +271,20 @@ export async function handleExecuteTask(payload: SequenceExecuteTaskPayload) {
   const account = await prisma.emailAccount.findFirst({
     where: { userId: task.lead.assignedToId, isActive: true },
   });
-  if (!account) return { status: 'failed', reason: 'no_active_mailbox_connected' };
+  if (!account) {
+    // Dead-end prevention: Notify user about missing mailbox
+    await prisma.notification.create({
+      data: {
+        userId: task.lead.assignedToId,
+        type: 'sequence_error',
+        title: 'Auto-send Failed: No Mailbox',
+        text: `Cannot auto-send sequence email to ${task.lead.firstName} ${task.lead.lastName} because you have no active email account connected. Please connect your email and send manually.`,
+        linkTo: `/leads/${task.lead.id}`,
+        tenantId: task.tenantId,
+      }
+    });
+    return { status: 'failed', reason: 'no_active_mailbox_connected' };
+  }
 
   // CAS concurrency lock — only one runner proceeds past here.
   const lock = await prisma.task.updateMany({

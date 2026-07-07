@@ -141,12 +141,13 @@ export async function advanceSequence(
   }
 }
 
-export type PauseReason = 'replied' | 'bounced' | 'meeting_booked';
+export type PauseReason = 'replied' | 'bounced' | 'meeting_booked' | 'manual';
 
 const PAUSE_DESCRIPTIONS: Record<PauseReason, string> = {
   replied: 'lead replied',
   bounced: 'email bounced',
   meeting_booked: 'meeting booked',
+  manual: 'manually paused',
 };
 
 /**

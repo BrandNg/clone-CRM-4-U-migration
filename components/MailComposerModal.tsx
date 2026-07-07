@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { Mail, Send, X, AlertCircle, Loader2 } from 'lucide-react';
 
 interface Task { id: string; type: string; title: string; description: string; dueDate: string; status: string; leadId: string; }
-interface Lead { id: string; firstName: string; lastName: string; company: string; title: string; email: string; phone?: string; }
+interface Lead { id: string; firstName: string; lastName: string; company: string; title: string; email: string; phone?: string; sequenceId?: string; sequenceStep?: number; }
 interface EmailAccount { id: string; email: string; provider: string }
+interface Template { id: string; name: string; channel: string; subject?: string | null; body: string }
 
 interface MailComposerModalProps {
   lead: Lead;
@@ -24,6 +25,8 @@ export default function MailComposerModal({ lead, onClose, onSent }: MailCompose
   const [loadingAccount, setLoadingAccount] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
 
   // Close on Escape.
   useEffect(() => {
@@ -36,28 +39,54 @@ export default function MailComposerModal({ lead, onClose, onSent }: MailCompose
     Promise.all([
       fetch('/api/templates').then((r) => (r.ok ? r.json() : [])),
       fetch('/api/email/accounts').then((r) => (r.ok ? r.json() : [])),
+      lead.sequenceId ? fetch(`/api/sequences/${lead.sequenceId}`).then(r => r.ok ? r.json() : null) : Promise.resolve(null),
     ])
-      .then(([templates, accounts]: [{ channel: string; subject?: string | null; body: string }[], EmailAccount[]]) => {
+      .then(([tpls, accounts, sequenceData]: [Template[], EmailAccount[], any]) => {
         setAccount(Array.isArray(accounts) && accounts.length > 0 ? accounts[0] : null);
+        const emailTemplates = Array.isArray(tpls) ? tpls.filter(t => t.channel === 'email') : [];
+        setTemplates(emailTemplates);
 
-        const template = templates.find((t) => t.channel === 'email') ?? templates[0];
-        if (!template) { setSubject('Following up'); return; }
+        let initialTemplateId = '';
 
-        const replacements: Record<string, string> = {
-          firstName: lead.firstName, lastName: lead.lastName, company: lead.company,
-          title: lead.title, email: lead.email, phone: lead.phone || 'your phone number',
-          sdrName: 'SDR', sdrTitle: 'Sales Development Representative',
-        };
-        const substitute = (str: string) =>
-          Object.entries(replacements).reduce(
-            (s, [k, v]) => s.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g'), v), str);
+        if (sequenceData && sequenceData.steps && lead.sequenceStep) {
+          const stepConfig = sequenceData.steps.find((s: any) => s.order === lead.sequenceStep);
+          if (stepConfig && stepConfig.templateId) {
+             initialTemplateId = stepConfig.templateId;
+          }
+        }
 
-        setSubject(substitute(template.subject ?? 'Following up'));
-        setBody(substitute(template.body));
+        if (initialTemplateId) {
+          setSelectedTemplateId(initialTemplateId);
+          applyTemplate(initialTemplateId, emailTemplates);
+        } else {
+          setSubject('Following up');
+        }
       })
       .catch(() => setSubject('Following up'))
       .finally(() => setLoadingAccount(false));
   }, [lead]);
+
+  const applyTemplate = (templateId: string, availableTemplates: Template[] = templates) => {
+    const t = availableTemplates.find(x => x.id === templateId);
+    if (!t) return;
+    const replacements: Record<string, string> = {
+      firstName: lead.firstName, lastName: lead.lastName, company: lead.company,
+      title: lead.title, email: lead.email, phone: lead.phone || 'your phone number',
+      sdrName: 'SDR', sdrTitle: 'Sales Development Representative',
+    };
+    const substitute = (str: string) =>
+      Object.entries(replacements).reduce(
+        (s, [k, v]) => s.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g'), v), str);
+
+    setSubject(substitute(t.subject ?? 'Following up'));
+    setBody(substitute(t.body));
+  };
+
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const tid = e.target.value;
+    setSelectedTemplateId(tid);
+    if (tid) applyTemplate(tid);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +97,7 @@ export default function MailComposerModal({ lead, onClose, onSent }: MailCompose
       const res = await fetch('/api/email/send', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ accountId: account.id, to: lead.email, subject, body, leadId: lead.id }),
+        body: JSON.stringify({ accountId: account.id, to: lead.email, subject, body, leadId: lead.id, templateId: selectedTemplateId || undefined }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -125,6 +154,17 @@ export default function MailComposerModal({ lead, onClose, onSent }: MailCompose
             <label htmlFor="mail-to" className="text-[10px] font-bold font-mono text-text-muted uppercase block">Recipient</label>
             <input id="mail-to" type="text" value={`${lead.firstName} ${lead.lastName} <${lead.email}>`} disabled
               className="w-full bg-card-border/20 border border-transparent rounded-lg px-2.5 py-1.5 text-text-muted cursor-not-allowed font-medium" />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="mail-template" className="text-[10px] font-bold font-mono text-text-muted uppercase block">Template</label>
+            <select id="mail-template" value={selectedTemplateId} onChange={handleTemplateChange}
+              className="w-full bg-background border border-card-border rounded-lg px-2.5 py-1.5 text-text-primary focus:outline-none focus:border-brand-red font-medium">
+              <option value="">— Blank Template —</option>
+              {templates.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-1">
