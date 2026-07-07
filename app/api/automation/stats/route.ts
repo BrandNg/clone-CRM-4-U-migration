@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireManager } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_req: NextRequest) {
-  const userOrRes = await requireManager();
+  const userOrRes = await requireAuth();
   if (userOrRes instanceof NextResponse) return userOrRes;
 
   try {

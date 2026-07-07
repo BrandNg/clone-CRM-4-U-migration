@@ -105,7 +105,7 @@ export default function TemplatesPage() {
     setCategory(temp.category);
     setActivePane('edit');
     setAbOpen(false);
-    if (isManager) loadAbVariants(temp.id);
+    loadAbVariants(temp.id);
   };
 
   const handleInsertMergeField = (field: string) => {
@@ -441,8 +441,7 @@ export default function TemplatesPage() {
                       </div>
                     )}
 
-                    {/* A/B Testing — managers only */}
-                    {isManager && (
+                    {/* A/B Testing */}
                     <div className="border border-card-border rounded-xl overflow-hidden">
                       <button
                         onClick={() => setAbOpen(!abOpen)}
@@ -504,7 +503,6 @@ export default function TemplatesPage() {
                         </div>
                       )}
                     </div>
-                    )}
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">

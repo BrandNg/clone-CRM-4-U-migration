@@ -112,9 +112,9 @@ export function buildRoleScope(user: SessionUser) {
   }
 }
 
-/** Roles allowed to import and export leads. SDR + Team Lead are intentionally excluded. */
+/** Roles allowed to import and export leads. Team Lead is intentionally excluded. */
 export function canImportExport(role: SessionUser['role']): boolean {
-  return role === 'director' || role === 'floor_manager' || role === 'leadgen';
+  return role === 'director' || role === 'floor_manager' || role === 'leadgen' || role === 'sdr';
 }
 
 /**

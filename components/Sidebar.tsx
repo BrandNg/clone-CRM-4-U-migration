@@ -63,7 +63,7 @@ export default function Sidebar({ userRole = 'sdr' }: SidebarProps) {
         { name: 'Performance', href: '/sequences/performance', icon: TrendingUp },
         { name: 'Templates', href: '/templates', icon: FileText },
         ...(isManager ? [{ name: 'Team View', href: '/team', icon: BarChart3 }] : []),
-        ...(isManager ? [{ name: 'Automation', href: '/automation', icon: Cpu }] : []),
+        { name: 'Automation', href: '/automation', icon: Cpu },
         { name: 'Settings', href: '/settings', icon: Settings },
       ];
 

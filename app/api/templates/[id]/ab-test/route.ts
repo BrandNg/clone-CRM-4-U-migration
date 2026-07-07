@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireRole } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { handleApiError } from '@/lib/api/errors';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userOrRes = await requireRole('team_lead');
+  const userOrRes = await requireAuth();
   if (userOrRes instanceof NextResponse) return userOrRes;
 
   try {
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userOrRes = await requireRole('team_lead');
+  const userOrRes = await requireAuth();
   if (userOrRes instanceof NextResponse) return userOrRes;
 
   try {
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userOrRes = await requireRole('team_lead');
+  const userOrRes = await requireAuth();
   if (userOrRes instanceof NextResponse) return userOrRes;
 
   try {

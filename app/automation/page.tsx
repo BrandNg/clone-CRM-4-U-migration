@@ -95,10 +95,8 @@ export default function AutomationDashboard() {
   }, [showToast]);
 
   useEffect(() => {
-    if (isManager) {
-      fetchStats();
-    }
-  }, [isManager, fetchStats]);
+    fetchStats();
+  }, [fetchStats]);
 
   const handleTriggerSequence = async () => {
     setIsTriggeringSequence(true);
@@ -161,19 +159,6 @@ export default function AutomationDashboard() {
     }
   };
 
-  if (!isManager) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4 max-w-md mx-auto my-12 animate-in fade-in duration-300">
-        <div className="w-16 h-16 bg-brand-red/10 border border-brand-red/25 rounded-2xl flex items-center justify-center text-brand-red">
-          <ShieldAlert className="w-8 h-8" />
-        </div>
-        <h2 className="font-display font-extrabold text-lg text-text-primary">Manager Access Only</h2>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          The AI Automation Dashboard is restricted to Directors, Floor Managers, and Team Leads.
-        </p>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -261,6 +246,8 @@ export default function AutomationDashboard() {
               </div>
             </div>
             
+            {isManager && (
+            <>
             <button
               onClick={handleTriggerSequence}
               disabled={isTriggeringSequence}
@@ -306,6 +293,8 @@ export default function AutomationDashboard() {
                 )}
               </div>
             )}
+            </>
+            )}
           </div>
 
           {/* Action Card: Inbox Synchronization */}
@@ -322,6 +311,8 @@ export default function AutomationDashboard() {
               </div>
             </div>
 
+            {isManager && (
+            <>
             <button
               onClick={handleTriggerInbox}
               disabled={isTriggeringInbox}
@@ -365,6 +356,8 @@ export default function AutomationDashboard() {
                   </div>
                 )}
               </div>
+            )}
+            </>
             )}
           </div>
 
