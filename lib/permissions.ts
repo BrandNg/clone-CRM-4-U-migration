@@ -6,5 +6,5 @@ import type { UserRole } from '@/context/AppContext';
  * SDR + Team Lead are intentionally excluded from import/export.
  */
 export function canImportExport(role: UserRole): boolean {
-  return role === 'director' || role === 'floor_manager' || role === 'leadgen';
+  return role === 'director' || role === 'floor_manager' || role === 'leadgen' || role === 'sdr';
 }
