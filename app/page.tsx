@@ -13,6 +13,12 @@ import {
   Award,
   FileText,
   MoreHorizontal,
+  Flame,
+  PhoneOff,
+  PartyPopper,
+  CheckCircle,
+  Briefcase,
+  Zap,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
@@ -275,7 +281,7 @@ export default function DashboardPage() {
         });
       }
       showToast(
-        outcome === 'do_not_call' ? 'Lead flagged as Do Not Call ⛔' : 'Lead flagged as wrong number',
+        outcome === 'do_not_call' ? 'Lead flagged as Do Not Call' : 'Lead flagged as wrong number',
         'info'
       );
     }
@@ -288,7 +294,7 @@ export default function DashboardPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stage: 'meeting_booked' }),
     });
-    if (res.ok) showToast('Lead moved to Meeting Booked 🎉', 'success');
+    if (res.ok) showToast('Lead moved to Meeting Booked', 'success');
     else showToast(await readApiError(res, 'Failed to update stage'), 'error');
     setMeetingPrompt(null);
   };
@@ -358,11 +364,11 @@ export default function DashboardPage() {
 
   const getChannelColor = (type: Task['type']) => {
     switch (type) {
-      case 'email': return 'bg-blue-500/10 border-blue-500/20';
-      case 'phone': return 'bg-green-500/10 border-green-500/20';
-      case 'linkedin': return 'bg-indigo-500/10 border-indigo-500/20';
-      case 'whatsapp': return 'bg-teal-500/10 border-teal-500/20';
-      default: return 'bg-gray-500/10 border-gray-500/20';
+      case 'email': return 'bg-blue-500/5 text-blue-500';
+      case 'phone': return 'bg-green-500/5 text-green-500';
+      case 'linkedin': return 'bg-indigo-500/5 text-indigo-500';
+      case 'whatsapp': return 'bg-teal-500/5 text-teal-500';
+      default: return 'bg-gray-500/5 text-gray-500';
     }
   };
 
@@ -395,7 +401,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2 self-auto">
           {isManager && sdrUsers.length > 0 && (
             <div className="flex items-center gap-2 bg-card-bg border border-card-border p-1.5 rounded-xl">
-              <span className="text-xs font-bold font-mono text-text-muted pl-2 uppercase">Rep:</span>
+              <span className="text-xs font-bold text-text-secondary pl-2">Rep:</span>
               <select
                 value={selectedSdrId}
                 onChange={(e) => setSelectedSdrId(e.target.value)}
@@ -418,7 +424,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Slim stat bar */}
-      <div className="glass-card rounded-xl px-4 py-2.5 flex flex-wrap items-center gap-3 text-xs font-mono">
+      <div className="glass-card rounded-xl px-4 py-2.5 flex flex-wrap items-center gap-3 text-sm font-medium">
         <span className="text-text-primary font-semibold">
           Today {completedTodayCount + pendingTodayCount} tasks
         </span>
@@ -462,7 +468,7 @@ export default function DashboardPage() {
                 >
                   {tab}
                   <span
-                    className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                    className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
                       tab === 'overdue' && count > 0
                         ? 'bg-brand-red/10 text-brand-red font-bold'
                         : 'bg-card-border text-text-secondary'
@@ -478,7 +484,9 @@ export default function DashboardPage() {
           <div className="divide-y divide-card-border max-h-[600px] overflow-y-auto">
             {visibleTasks.length === 0 && (
               <div className="p-10 text-center text-xs text-text-muted space-y-2">
-                <p className="text-xl">{activeTab === 'overdue' ? '✅' : '🎉'}</p>
+                <div className="flex justify-center text-text-muted mb-2">
+                  {activeTab === 'overdue' ? <CheckCircle className="w-12 h-12" /> : <PartyPopper className="w-12 h-12" />}
+                </div>
                 <p className="font-semibold text-text-primary">
                   {activeTab === 'today'
                     ? 'All done for today!'
@@ -498,7 +506,7 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-start gap-3 min-w-0">
                     <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center border flex-shrink-0 mt-0.5 ${getChannelColor(task.type)}`}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${getChannelColor(task.type)}`}
                     >
                       {getChannelIcon(task.type)}
                     </div>
@@ -506,33 +514,35 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
                           onClick={() => setSelectedLeadId(task.lead?.id)}
-                          className="font-display font-extrabold text-sm text-text-primary hover:text-brand-red hover:underline text-left"
+                          className="font-display font-bold text-sm text-text-primary hover:text-brand-red hover:underline text-left"
                         >
                           {task.lead?.firstName} {task.lead?.lastName}
                         </button>
                         <span className="text-xs text-text-muted">{task.lead?.company}</span>
                         {isHot && (
-                          <span className="bg-brand-red/10 border border-brand-red/30 text-brand-red text-xs font-extrabold px-1.5 rounded font-mono">
-                            HOT
+                          <span className="text-brand-red text-xs font-bold flex items-center gap-1">
+                            <Flame className="w-3.5 h-3.5" /> HOT
+                          </span>
+                        )}
+                        {task.type === 'phone' && task.lead?.tags?.includes('do_not_call') && (
+                          <span className="text-brand-red text-xs font-bold flex items-center gap-1">
+                            <PhoneOff className="w-3.5 h-3.5" /> DNC
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-text-secondary truncate">{task.title}</p>
-                      {activeTab === 'overdue' && (
-                        <span className="inline-block text-xs font-semibold text-brand-red font-mono bg-brand-red/5 px-2 py-0.5 border border-brand-red/10 rounded">
-                          ⚠️ Overdue
-                        </span>
-                      )}
-                      {task.type === 'phone' && task.lead?.tags?.includes('do_not_call') && (
-                        <span className="inline-block text-xs font-semibold text-brand-red font-mono bg-brand-red/5 px-2 py-0.5 border border-brand-red/20 rounded">
-                          ⛔ Do Not Call
-                        </span>
-                      )}
-                      {deferredIds.has(task.id) && (
-                        <span className="inline-block text-xs font-semibold text-text-muted font-mono bg-card-border/40 px-2 py-0.5 border border-card-border rounded">
-                          ↩ skipped — revisit
-                        </span>
-                      )}
+                      <p className="text-xs text-text-secondary truncate flex items-center gap-2">
+                        {task.title}
+                        {activeTab === 'overdue' && (
+                          <span className="text-[10px] font-bold text-brand-red uppercase tracking-wide">
+                            • Overdue
+                          </span>
+                        )}
+                        {deferredIds.has(task.id) && (
+                          <span className="text-[10px] font-semibold text-text-muted italic">
+                            (skipped)
+                          </span>
+                        )}
+                      </p>
                     </div>
                   </div>
 
@@ -601,7 +611,7 @@ export default function DashboardPage() {
                       </>
                     ) : (
                       <span
-                        className={`px-2.5 py-1.5 rounded-lg text-xs font-extrabold font-mono border ${
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border ${
                           task.status === 'completed'
                             ? 'bg-green-500/15 text-green-500 border-green-500/20'
                             : 'bg-card-border text-text-muted border-transparent'
@@ -662,12 +672,12 @@ export default function DashboardPage() {
                   ].map(({ label, count, color }) => (
                     <div key={label} className="bg-background/60 border border-card-border rounded-xl p-3">
                       <p className={`font-display font-extrabold text-xl ${color}`}>{count}</p>
-                      <span className="text-xs uppercase font-mono text-text-muted">{label}</span>
+                      <span className="text-xs font-medium text-text-secondary">{label}</span>
                     </div>
                   ))}
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-xs font-bold font-mono text-text-muted uppercase">Pipeline Summary</p>
+                  <p className="text-xs font-bold text-text-primary">Pipeline Summary</p>
                   {(() => {
                     const stages = ['new', 'sequence_active', 'replied', 'meeting_booked', 'won', 'lost'] as const;
                     const totalLeads = stages.reduce((s, st) => s + (sdrPipelineCounts[st] ?? 0), 0) || 1;
@@ -680,11 +690,11 @@ export default function DashboardPage() {
                         const pct = Math.round((count / totalLeads) * 100);
                         return (
                           <div key={stage} className="flex items-center gap-2">
-                            <span className="text-xs w-16 text-text-muted font-mono">{labels[stage]}</span>
+                            <span className="text-xs w-16 text-text-secondary">{labels[stage]}</span>
                             <div className="flex-1 h-1.5 bg-card-border rounded-full overflow-hidden">
                               <div className={`h-full rounded-full ${colors[stage]} transition-all`} style={{ width: `${pct}%` }} />
                             </div>
-                            <span className="text-xs font-mono text-text-muted w-5 text-right">{count}</span>
+                            <span className="text-xs text-text-secondary w-5 text-right">{count}</span>
                           </div>
                         );
                       });
@@ -704,21 +714,21 @@ export default function DashboardPage() {
                 ) : (
                   activities.map((act) => (
                     <div key={act.id} className="flex gap-2.5 text-xs pb-1">
-                      <span className="text-sm mt-0.5">
-                        {act.type === 'meeting_booked' ? '🎉'
-                          : act.type === 'email_sent' ? '📧'
-                          : act.type === 'call_logged' ? '📞'
-                          : act.type === 'linkedin_touch' ? '💼'
-                          : '⚡'}
-                      </span>
+                      <div className="mt-0.5 flex-shrink-0">
+                        {act.type === 'meeting_booked' ? <PartyPopper className="w-4 h-4 text-emerald-500" />
+                          : act.type === 'email_sent' ? <Mail className="w-4 h-4 text-blue-500" />
+                          : act.type === 'call_logged' ? <PhoneCall className="w-4 h-4 text-green-500" />
+                          : act.type === 'linkedin_touch' ? <Briefcase className="w-4 h-4 text-indigo-500" />
+                          : <Zap className="w-4 h-4 text-amber-500" />}
+                      </div>
                       <div className="min-w-0">
                         <p className="text-text-primary leading-normal">
                           <span className="font-semibold">{act.user?.firstName}</span>{' '}{act.description || act.type?.replace(/_/g, ' ')}
                         </p>
                         {act.metadata?.outcome && (
-                          <p className="text-xs text-text-muted font-mono mt-0.5">Outcome: {act.metadata.outcome}</p>
+                          <p className="text-xs text-text-secondary mt-0.5">Outcome: {act.metadata.outcome}</p>
                         )}
-                        <span className="text-xs text-text-muted font-mono block mt-0.5">
+                        <span className="text-xs text-text-secondary block mt-0.5">
                           {formatActivityTimestamp(act.createdAt)}
                         </span>
                       </div>
@@ -741,7 +751,7 @@ export default function DashboardPage() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMeetingPrompt(null)} />
           <div className="relative glass-card rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" role="dialog" aria-modal="true">
             <div className="text-center space-y-2">
-              <span className="text-4xl">🎉</span>
+              <div className="flex justify-center mb-2"><PartyPopper className="w-12 h-12 text-emerald-500" /></div>
               <h2 className="font-display font-bold text-base text-text-primary">Meeting Booked!</h2>
               <p className="text-xs text-text-secondary leading-relaxed">
                 Move <span className="font-semibold text-text-primary">{meetingPrompt.lead.firstName} {meetingPrompt.lead.lastName}</span> to{' '}
@@ -777,10 +787,10 @@ export default function DashboardPage() {
             <div>
               <h2 className="font-display font-bold text-base text-text-primary">
                 {loggingTask.type === 'phone'
-                  ? '📞 Log Call'
+                  ? <span className="flex items-center gap-2"><PhoneCall className="w-5 h-5 text-brand-red" /> Log Call</span>
                   : loggingTask.type === 'linkedin'
-                  ? '💼 Log LinkedIn Touch'
-                  : '💬 Log WhatsApp Touch'}
+                  ? <span className="flex items-center gap-2"><Briefcase className="w-5 h-5 text-brand-red" /> Log LinkedIn Touch</span>
+                  : <span className="flex items-center gap-2"><MessageSquare className="w-5 h-5 text-brand-red" /> Log WhatsApp Touch</span>}
               </h2>
               <p className="text-xs text-text-secondary mt-0.5">
                 <span className="font-semibold">{loggingTask.lead.firstName} {loggingTask.lead.lastName}</span>
@@ -791,32 +801,33 @@ export default function DashboardPage() {
             {/* Phone outcome — 9 options (SKILL.md §21) */}
             {loggingTask.type === 'phone' && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold font-mono text-text-muted uppercase block">
+                <label className="text-xs font-bold text-text-secondary block">
                   Call Outcome <span className="text-brand-red">*</span>
                 </label>
-                <select
-                  value={callOutcome}
-                  onChange={(e) => setCallOutcome(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-lg px-2.5 py-2 text-xs text-text-primary focus:outline-none focus:border-brand-red"
-                >
-                  <option value="no_answer">No Answer</option>
-                  <option value="voicemail_left">Voicemail Left</option>
-                  <option value="voicemail_not_left">Went to Voicemail — No Message</option>
-                  <option value="connected_interested">Connected — Interested</option>
-                  <option value="connected_not_interested">Connected — Not Interested</option>
-                  <option value="connected_meeting_booked">Connected — Meeting Booked 🎉</option>
-                  <option value="callback_requested">Call Back Requested</option>
-                  <option value="wrong_number">Wrong Number</option>
-                  <option value="do_not_call">Do Not Call (Requested)</option>
-                </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="col-span-2 text-[10px] font-bold text-text-muted uppercase tracking-wider mt-1">No Contact</div>
+                  <button type="button" onClick={() => setCallOutcome('no_answer')} className={`py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-colors ${callOutcome === 'no_answer' ? 'bg-brand-red/10 border-brand-red/30 text-brand-red' : 'bg-background border-card-border text-text-secondary hover:border-brand-red/30 hover:text-text-primary'}`}>No Answer</button>
+                  <button type="button" onClick={() => setCallOutcome('voicemail_left')} className={`py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-colors ${callOutcome === 'voicemail_left' ? 'bg-brand-red/10 border-brand-red/30 text-brand-red' : 'bg-background border-card-border text-text-secondary hover:border-brand-red/30 hover:text-text-primary'}`}>Voicemail Left</button>
+                  <button type="button" onClick={() => setCallOutcome('voicemail_not_left')} className={`col-span-2 py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-colors ${callOutcome === 'voicemail_not_left' ? 'bg-brand-red/10 border-brand-red/30 text-brand-red' : 'bg-background border-card-border text-text-secondary hover:border-brand-red/30 hover:text-text-primary'}`}>Went to Voicemail — No Message</button>
+
+                  <div className="col-span-2 text-[10px] font-bold text-text-muted uppercase tracking-wider mt-1">Connected</div>
+                  <button type="button" onClick={() => setCallOutcome('connected_interested')} className={`py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-colors ${callOutcome === 'connected_interested' ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-background border-card-border text-text-secondary hover:border-green-500/30 hover:text-text-primary'}`}>Interested</button>
+                  <button type="button" onClick={() => setCallOutcome('connected_not_interested')} className={`py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-colors ${callOutcome === 'connected_not_interested' ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-background border-card-border text-text-secondary hover:border-amber-500/30 hover:text-text-primary'}`}>Not Interested</button>
+                  <button type="button" onClick={() => setCallOutcome('callback_requested')} className={`col-span-2 py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-colors ${callOutcome === 'callback_requested' ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' : 'bg-background border-card-border text-text-secondary hover:border-blue-500/30 hover:text-text-primary'}`}>Call Back Requested</button>
+                  <button type="button" onClick={() => setCallOutcome('connected_meeting_booked')} className={`col-span-2 py-1.5 px-2 rounded-lg text-xs font-bold text-center border transition-colors ${callOutcome === 'connected_meeting_booked' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-500 shadow-sm' : 'bg-background border-card-border text-text-secondary hover:border-emerald-500/30 hover:text-text-primary'}`}>Meeting Booked</button>
+
+                  <div className="col-span-2 text-[10px] font-bold text-text-muted uppercase tracking-wider mt-1">Bad Data</div>
+                  <button type="button" onClick={() => setCallOutcome('wrong_number')} className={`py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-colors ${callOutcome === 'wrong_number' ? 'bg-card-border/40 border-card-border text-text-primary' : 'bg-background border-card-border text-text-secondary hover:border-card-border hover:text-text-primary'}`}>Wrong Number</button>
+                  <button type="button" onClick={() => setCallOutcome('do_not_call')} className={`py-1.5 px-2 rounded-lg text-xs font-semibold text-center border transition-colors ${callOutcome === 'do_not_call' ? 'bg-card-border/40 border-card-border text-text-primary' : 'bg-background border-card-border text-text-secondary hover:border-card-border hover:text-text-primary'}`}>Do Not Call</button>
+                </div>
                 {callOutcome === 'connected_meeting_booked' && (
-                  <p className="text-xs text-emerald-500 font-mono">→ You'll be prompted to move this lead to Meeting Booked.</p>
+                  <p className="text-xs text-emerald-500 font-medium">→ You'll be prompted to move this lead to Meeting Booked.</p>
                 )}
                 {callOutcome === 'callback_requested' && (
-                  <p className="text-xs text-brand-orange font-mono">→ A follow-up call task will be created for tomorrow.</p>
+                  <p className="text-xs text-brand-orange font-medium">→ A follow-up call task will be created for tomorrow.</p>
                 )}
                 {(callOutcome === 'wrong_number' || callOutcome === 'do_not_call') && (
-                  <p className="text-xs text-text-muted font-mono">→ The lead will be flagged.</p>
+                  <p className="text-xs text-text-secondary font-medium">→ The lead will be flagged.</p>
                 )}
               </div>
             )}
@@ -824,7 +835,7 @@ export default function DashboardPage() {
             {/* LinkedIn — 3 options */}
             {loggingTask.type === 'linkedin' && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold font-mono text-text-muted uppercase block">
+                <label className="text-xs font-bold text-text-secondary block">
                   Action Type <span className="text-brand-red">*</span>
                 </label>
                 <select
@@ -844,7 +855,7 @@ export default function DashboardPage() {
             {/* WhatsApp — 3 options */}
             {loggingTask.type === 'whatsapp' && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold font-mono text-text-muted uppercase block">
+                <label className="text-xs font-bold text-text-secondary block">
                   Message Type <span className="text-brand-red">*</span>
                 </label>
                 <select
@@ -882,7 +893,7 @@ export default function DashboardPage() {
                 </div>
                 {responseReceived && (
                   <div className="pl-12">
-                    <label className="text-xs font-mono text-text-muted uppercase block mb-1">Advance lead stage?</label>
+                    <label className="text-xs font-semibold text-text-secondary block mb-1">Advance lead stage?</label>
                     <select
                       value={responseStage}
                       onChange={(e) => setResponseStage(e.target.value)}
