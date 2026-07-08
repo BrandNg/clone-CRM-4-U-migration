@@ -35,10 +35,8 @@ export async function PUT(
   const existing = await prisma.template.findUnique({ where: { id }, select: { createdById: true } });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const isManager = user.role === 'director' || user.role === 'floor_manager';
-  if (!isManager && existing.createdById !== user.id) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  // Ownership restriction removed per user request to open up scope for SDRs
+
 
   const template = await prisma.template.update({
     where: { id },
@@ -68,10 +66,8 @@ export async function DELETE(
   const existing = await prisma.template.findUnique({ where: { id }, select: { createdById: true } });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const isManager = user.role === 'director' || user.role === 'floor_manager';
-  if (!isManager && existing.createdById !== user.id) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  // Ownership restriction removed per user request
+
 
   await prisma.template.delete({ where: { id } });
   await invalidateList(user.tenantId, 'templates');
