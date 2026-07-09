@@ -5,8 +5,6 @@ import type { EmailSendPayload } from '@/lib/bullmq/types';
 import { EmailService } from '@/lib/email/EmailService';
 import { renderTemplate } from '@/lib/templates/render';
 
-const MAX_SENDS_PER_DAY = 80;
-
 async function atomicReserveQuota(accountId: string): Promise<boolean> {
   const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   const result = await prisma.$executeRaw`
@@ -21,7 +19,7 @@ async function atomicReserveQuota(accountId: string): Promise<boolean> {
       AND (
         "dailySendDate" IS NULL
         OR "dailySendDate" < ${today}
-        OR "dailySendCount" < ${MAX_SENDS_PER_DAY}
+        OR "dailySendCount" < "dailyCap"
       )
   `;
   return result > 0;
