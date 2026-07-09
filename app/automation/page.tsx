@@ -10,7 +10,8 @@ import {
   Layers, 
   CheckCircle2, 
   Activity, 
-  AlertCircle 
+  AlertCircle,
+  Edit2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAppContext } from '@/context/AppContext';
@@ -23,6 +24,7 @@ interface EmailAccount {
   isActive: boolean;
   lastSyncAt: string | null;
   dailySendCount: number;
+  dailyCap: number;
   dailySendDate: string | null;
   hourlySendWindow: number;
   user: {
@@ -75,6 +77,40 @@ export default function AutomationDashboard() {
 
   const [sequenceResult, setSequenceResult] = useState<any | null>(null);
   const [inboxResult, setInboxResult] = useState<any | null>(null);
+
+  const [editingCapId, setEditingCapId] = useState<string | null>(null);
+  const [editCapValue, setEditCapValue] = useState<string>('');
+  const [isUpdatingCap, setIsUpdatingCap] = useState(false);
+
+  const handleUpdateCap = async (accountId: string) => {
+    const val = parseInt(editCapValue, 10);
+    if (isNaN(val) || val < 1) {
+      showToast('Please enter a valid number greater than 0', 'error');
+      return;
+    }
+    
+    setIsUpdatingCap(true);
+    try {
+      const res = await fetch(`/api/automation/accounts/${accountId}/cap`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dailyCap: val }),
+      });
+      
+      if (res.ok) {
+        showToast('Daily cap updated successfully', 'success');
+        setEditingCapId(null);
+        fetchStats();
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to update daily cap', 'error');
+      }
+    } catch {
+      showToast('Network error while updating daily cap', 'error');
+    } finally {
+      setIsUpdatingCap(false);
+    }
+  };
 
   const fetchStats = useCallback(async () => {
     try {
@@ -380,7 +416,7 @@ export default function AutomationDashboard() {
                 <tr className="border-b border-card-border text-[10px] uppercase text-text-secondary tracking-wider font-semibold">
                   <th className="py-2.5">Owner / SDR</th>
                   <th className="py-2.5">Email / Provider</th>
-                  <th className="py-2.5 text-center">Daily Cap (80)</th>
+                  <th className="py-2.5 text-center">Daily Cap</th>
                   <th className="py-2.5">Last Sync</th>
                   <th className="py-2.5 text-center">Status</th>
                 </tr>
@@ -394,10 +430,11 @@ export default function AutomationDashboard() {
                   </tr>
                 ) : (
                   emailAccounts.map((account) => {
-                    const capPercentage = Math.min(100, Math.round((account.dailySendCount / 80) * 100));
+                    const dailyCap = account.dailyCap || 80;
+                    const capPercentage = Math.min(100, Math.round((account.dailySendCount / dailyCap) * 100));
                     
                     return (
-                      <tr key={account.id} className="hover:bg-card-bg/20 transition-colors">
+                      <tr key={account.id} className="group hover:bg-card-bg/20 transition-colors">
                         <td className="py-3 font-semibold text-text-primary">
                           {account.user.firstName} {account.user.lastName}
                         </td>
@@ -407,7 +444,44 @@ export default function AutomationDashboard() {
                         </td>
                         <td className="py-3 px-2">
                           <div className="flex flex-col items-center gap-1 min-w-[80px]">
-                            <span className="font-mono font-semibold">{account.dailySendCount} / 80</span>
+                            {editingCapId === account.id ? (
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  className="w-14 text-center bg-background border border-card-border rounded px-1 py-0.5 text-xs font-mono"
+                                  value={editCapValue}
+                                  onChange={(e) => setEditCapValue(e.target.value)}
+                                  disabled={isUpdatingCap}
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleUpdateCap(account.id);
+                                    if (e.key === 'Escape') setEditingCapId(null);
+                                  }}
+                                />
+                                <button
+                                  onClick={() => handleUpdateCap(account.id)}
+                                  disabled={isUpdatingCap}
+                                  className="text-green-500 hover:text-green-400 p-0.5 cursor-pointer"
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-semibold">{account.dailySendCount} / {dailyCap}</span>
+                                {isManager && (
+                                  <button
+                                    onClick={() => {
+                                      setEditingCapId(account.id);
+                                      setEditCapValue(dailyCap.toString());
+                                    }}
+                                    className="text-text-muted hover:text-text-primary p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
                             <div className="w-full bg-card-border/50 h-1.5 rounded-full overflow-hidden">
                               <div 
                                 className={`h-full rounded-full transition-all duration-300 ${

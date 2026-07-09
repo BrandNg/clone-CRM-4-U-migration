@@ -5,7 +5,6 @@ import { createOutboundMessage, enqueueEmailSendWorkflow } from '@/lib/workflows
 
 const BUSINESS_HOUR_START = 9;
 const BUSINESS_HOUR_END = 17;
-const MAX_SENDS_PER_DAY = 80;
 const OPTIMAL_WINDOWS: Record<string, { start: number; end: number }> = {
   'America/New_York': { start: 9, end: 11 },
   'America/Chicago': { start: 9, end: 11 },
@@ -75,7 +74,7 @@ export async function distributeSends(accountId: string): Promise<void> {
 export async function canSendNow(accountId: string): Promise<boolean> {
   const account = await prisma.emailAccount.findUnique({
     where: { id: accountId },
-    select: { dailySendCount: true, dailySendDate: true },
+    select: { dailySendCount: true, dailySendDate: true, dailyCap: true },
   });
   if (!account) return false;
 
@@ -90,7 +89,7 @@ export async function canSendNow(accountId: string): Promise<boolean> {
     return true;
   }
 
-  return account.dailySendCount < MAX_SENDS_PER_DAY;
+  return account.dailySendCount < account.dailyCap;
 }
 
 export async function incrementSendCount(accountId: string): Promise<void> {

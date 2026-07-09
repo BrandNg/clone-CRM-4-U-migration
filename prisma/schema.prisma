@@ -550,6 +550,7 @@ model EmailAccount {
   lastSyncAt       DateTime?
   syncCursor       String?
   dailySendCount   Int           @default(0)
+  dailyCap         Int           @default(80)
   dailySendDate    DateTime?
   hourlySendWindow Int           @default(0)
   createdAt        DateTime      @default(now())

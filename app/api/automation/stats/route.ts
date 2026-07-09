@@ -32,7 +32,7 @@ export async function GET(_req: NextRequest) {
     ]);
 
     // 2. Fetch email account statuses (active only; exclude credential fields)
-    const emailAccounts = await prisma.emailAccount.findMany({
+    const rawEmailAccounts = await prisma.emailAccount.findMany({
       where: { isActive: true },
       orderBy: { email: 'asc' },
       select: {
@@ -42,6 +42,8 @@ export async function GET(_req: NextRequest) {
         isActive: true,
         lastSyncAt: true,
         dailySendCount: true,
+        dailyCap: true,
+        dailySendDate: true,
         hourlySendWindow: true,
         imapServer: true,
         smtpServer: true,
@@ -54,6 +56,17 @@ export async function GET(_req: NextRequest) {
           },
         },
       },
+    });
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const emailAccounts = rawEmailAccounts.map(account => {
+      const isNewDay = !account.dailySendDate || account.dailySendDate < today;
+      return {
+        ...account,
+        dailySendCount: isNewDay ? 0 : account.dailySendCount,
+      };
     });
 
     // 3. Fetch recent automation activity logs
