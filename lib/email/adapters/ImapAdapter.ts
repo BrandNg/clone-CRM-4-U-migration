@@ -46,7 +46,7 @@ export class ImapAdapter implements EmailAdapter {
     return info.messageId;
   }
 
-  /** Fetch inbox messages received since `since` via IMAP (envelopes only). */
+  /** Fetch inbox messages received since `since` via IMAP. */
   async fetchMessagesSince(since: Date): Promise<InboxMessage[]> {
     if (!this.config.imapServer) return [];
 
@@ -60,23 +60,33 @@ export class ImapAdapter implements EmailAdapter {
       tls: { rejectUnauthorized: process.env.MAIL_ALLOW_SELF_SIGNED !== 'true' },
     });
 
+    const { simpleParser } = await import('mailparser');
+
     await client.connect();
     const messages: InboxMessage[] = [];
     try {
       const lock = await client.getMailboxLock('INBOX');
       try {
         const uids = ((await client.search({ since })) || []) as number[];
-        // Cap per run; newest last in UID order, keep the most recent 50
-        const recent = uids.slice(-50);
+        // Cap per run; newest last in UID order, keep the most recent 30 (source download is heavier)
+        const recent = uids.slice(-30);
         if (recent.length > 0) {
-          for await (const msg of client.fetch(recent, { envelope: true })) {
+          for await (const msg of client.fetch(recent, { envelope: true, source: true })) {
+            const parsed = (await (simpleParser as any)(msg.source || '')) as any;
             const from = msg.envelope?.from?.[0];
+            const to = msg.envelope?.to?.[0];
             messages.push({
               providerMessageId: String(msg.uid),
               fromEmail: (from?.address ?? '').toLowerCase(),
+              fromName: from?.name ?? null,
+              to: (to?.address ?? '').toLowerCase(),
               subject: msg.envelope?.subject ?? '',
               date: msg.envelope?.date ?? new Date(),
+              body: parsed.text || '',
+              bodyHtml: parsed.html || parsed.text || '',
               failedRecipient: null,
+              isSpam: false,
+              isTrash: false,
             });
           }
         }

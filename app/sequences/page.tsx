@@ -15,6 +15,8 @@ import {
   Play,
   Pause,
   StopCircle,
+  History,
+  X,
 } from 'lucide-react';
 import Linkedin from '@/components/icons/Linkedin';
 import { useToast } from '@/context/ToastContext';
@@ -70,6 +72,86 @@ export default function SequencesPage() {
   const [enrollmentFilters, setEnrollmentFilters] = useState({ step: '', status: '' });
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [bulkActioning, setBulkActioning] = useState(false);
+
+  const [selectedEnrollmentForLogs, setSelectedEnrollmentForLogs] = useState<string | null>(null);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsData, setLogsData] = useState<{ tasks: any[]; outboundMessages: any[]; activities: any[] } | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+  const fetchLogs = useCallback(async (enrollmentId: string) => {
+    if (!selectedSeq) return;
+    setLogsLoading(true);
+    try {
+      const res = await fetch(`/api/sequences/${selectedSeq.id}/enrollments/${enrollmentId}/logs`);
+      if (res.ok) {
+        const data = await res.json();
+        setLogsData(data);
+      } else {
+        showToast('Failed to fetch sequence logs', 'error');
+      }
+    } catch {
+      showToast('Network error fetching sequence logs', 'error');
+    } finally {
+      setLogsLoading(false);
+    }
+  }, [selectedSeq, showToast]);
+
+  useEffect(() => {
+    if (selectedEnrollmentForLogs) {
+      fetchLogs(selectedEnrollmentForLogs);
+    } else {
+      setLogsData(null);
+    }
+  }, [selectedEnrollmentForLogs, fetchLogs]);
+
+  const handleRunNow = async (enrollmentId: string) => {
+    if (!selectedSeq) return;
+    setActionLoadingId(enrollmentId);
+    try {
+      const res = await fetch(`/api/sequences/${selectedSeq.id}/enrollments/${enrollmentId}/run-now`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        const result = await res.json();
+        showToast(result.message || 'Execution triggered successfully!', 'success');
+        loadEnrollments();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to force execute step', 'error');
+      }
+    } catch {
+      showToast('Network error forcing sequence execution', 'error');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleToggleStatus = async (enrollmentId: string, currentStatus: string) => {
+    if (!selectedSeq) return;
+    setActionLoadingId(enrollmentId);
+    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+    try {
+      const res = await fetch(`/api/sequences/${selectedSeq.id}/enrollments/${enrollmentId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        showToast(`Sequence ${newStatus === 'active' ? 'resumed' : 'paused'} successfully!`, 'success');
+        setEnrollments((prev) =>
+          prev.map((e) => (e.id === enrollmentId ? { ...e, status: newStatus } : e))
+        );
+        loadEnrollments();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to toggle status', 'error');
+      }
+    } catch {
+      showToast('Network error toggling sequence status', 'error');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
 
   const loadSequences = useCallback(async () => {
     const res = await fetch('/api/sequences', { cache: 'no-store' });
@@ -672,6 +754,7 @@ export default function SequencesPage() {
                         <th className="px-4 py-3 font-semibold text-text-secondary">Status</th>
                         <th className="px-4 py-3 font-semibold text-text-secondary">Current Step</th>
                         <th className="px-4 py-3 font-semibold text-text-secondary">Next Task Due</th>
+                        <th className="px-4 py-3 font-semibold text-text-secondary text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-card-border">
@@ -706,6 +789,45 @@ export default function SequencesPage() {
                             <td className="px-4 py-3 font-mono text-text-primary">Step {enr.currentStep}</td>
                             <td className="px-4 py-3 font-mono text-text-muted">
                               {pendingTask ? new Date(pendingTask.dueDate).toLocaleString() : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => setSelectedEnrollmentForLogs(enr.id)}
+                                  className="p-1 hover:bg-card-border/50 text-text-muted hover:text-text-primary rounded transition-colors"
+                                  title="View Execution Audit Log"
+                                >
+                                  <History className="w-4 h-4" />
+                                </button>
+                                {enr.status === 'active' && (
+                                  <button
+                                    onClick={() => handleRunNow(enr.id)}
+                                    disabled={actionLoadingId !== null}
+                                    className="p-1 hover:bg-green-500/10 text-text-muted hover:text-green-500 rounded transition-colors disabled:opacity-50"
+                                    title="Run Now (Execute pending step immediately)"
+                                  >
+                                    <Play className="w-4 h-4 fill-current" />
+                                  </button>
+                                )}
+                                {(enr.status === 'active' || enr.status === 'paused') && (
+                                  <button
+                                    onClick={() => handleToggleStatus(enr.id, enr.status)}
+                                    disabled={actionLoadingId !== null}
+                                    className={`p-1 rounded transition-colors disabled:opacity-50 ${
+                                      enr.status === 'active'
+                                        ? 'hover:bg-amber-500/10 text-text-muted hover:text-amber-500'
+                                        : 'hover:bg-green-500/10 text-text-muted hover:text-green-500'
+                                    }`}
+                                    title={enr.status === 'active' ? 'Pause Sequence' : 'Resume Sequence'}
+                                  >
+                                    {enr.status === 'active' ? (
+                                      <Pause className="w-4 h-4" />
+                                    ) : (
+                                      <Play className="w-4 h-4 animate-in fade-in" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -776,6 +898,122 @@ export default function SequencesPage() {
             </form>
           </div>
         </>
+      )}
+
+      {/* Right-side Audit Log Slide-over Panel */}
+      {selectedEnrollmentForLogs && (
+        <div className="fixed inset-y-0 right-0 w-96 bg-card-bg border-l border-card-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-250 text-left">
+          {/* Header */}
+          <div className="p-4 border-b border-card-border flex items-center justify-between bg-background">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📋</span>
+              <div className="text-left">
+                <h3 className="text-xs font-bold font-mono text-text-primary uppercase">Sequence Audit Log</h3>
+                <p className="text-[10px] text-text-muted mt-0.5">
+                  Lead: {enrollments.find((e) => e.id === selectedEnrollmentForLogs)?.lead.firstName} {enrollments.find((e) => e.id === selectedEnrollmentForLogs)?.lead.lastName}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedEnrollmentForLogs(null)}
+              className="p-1 hover:bg-card-border/60 text-text-muted hover:text-text-primary rounded"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs bg-background/50">
+            {logsLoading ? (
+              <div className="flex justify-center items-center h-48">
+                <Loader2 className="w-6 h-6 animate-spin text-text-muted" />
+              </div>
+            ) : logsData ? (
+              <div className="space-y-4">
+                {/* Activity Timeline */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold font-mono text-text-muted uppercase">Execution Timeline</h4>
+                  {logsData.activities.length === 0 && logsData.tasks.length === 0 ? (
+                    <p className="text-text-muted italic text-[10px]">No sequence execution events recorded yet.</p>
+                  ) : (
+                    <div className="relative border-l border-card-border pl-4 ml-1.5 space-y-4 text-left">
+                      {[
+                        ...logsData.activities.map((a) => ({
+                          type: 'activity' as const,
+                          date: new Date(a.createdAt),
+                          title: a.description,
+                          meta: a.metadata,
+                          status: null as string | null,
+                          key: `act-${a.id}`,
+                        })),
+                        ...logsData.tasks.map((t) => ({
+                          type: 'task' as const,
+                          date: new Date(t.completedAt || t.dueDate),
+                          title: `Step ${t.sequenceStep}: ${t.title}`,
+                          status: t.status as string | null,
+                          meta: null,
+                          key: `task-${t.id}`,
+                        })),
+                      ]
+                        .sort((a, b) => b.date.getTime() - a.date.getTime())
+                        .map((item) => (
+                          <div key={item.key} className="relative">
+                            <span className={`absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-card-bg ${
+                              item.type === 'activity' ? 'bg-blue-500' :
+                              item.status === 'completed' ? 'bg-green-500' :
+                              item.status === 'skipped' ? 'bg-text-muted' :
+                              'bg-amber-500'
+                            }`} />
+                            <div className="space-y-0.5">
+                              <p className="font-semibold text-text-primary">{item.title}</p>
+                              <div className="flex items-center gap-1.5 text-[9px] text-text-muted font-mono">
+                                <span>{item.date.toLocaleString()}</span>
+                                {item.status && (
+                                  <span className={`px-1 rounded text-[8px] uppercase border ${
+                                    item.status === 'completed' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
+                                    item.status === 'skipped' ? 'bg-card-border text-text-muted border-card-border' :
+                                    'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                  }`}>
+                                    {item.status}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Outbound Messages */}
+                {logsData.outboundMessages.length > 0 && (
+                  <div className="space-y-2 border-t border-card-border/60 pt-3 text-left">
+                    <h4 className="text-[10px] font-bold font-mono text-text-muted uppercase">Sent Outbound Emails</h4>
+                    <div className="space-y-2">
+                      {logsData.outboundMessages.map((msg) => (
+                        <div key={msg.id} className="p-2 border border-card-border rounded-lg bg-card-bg space-y-1">
+                          <p className="font-semibold text-text-primary truncate">{msg.subject || '(No Subject)'}</p>
+                          <div className="flex justify-between items-center text-[9px] text-text-muted font-mono">
+                            <span>{new Date(msg.createdAt).toLocaleString()}</span>
+                            <span className={`px-1 rounded text-[8px] uppercase ${
+                              msg.status === 'sent' ? 'bg-green-500/10 text-green-500' :
+                              msg.status === 'failed' ? 'bg-red-500/10 text-red-500' :
+                              'bg-amber-500/10 text-amber-500'
+                            }`}>
+                              {msg.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-text-muted italic text-center">Failed to load sequence audit log.</p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

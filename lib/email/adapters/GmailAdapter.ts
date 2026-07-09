@@ -120,25 +120,77 @@ export class GmailAdapter implements EmailAdapter {
       maxResults: 50,
     });
 
+    const getGmailMessageBody = (payload: any): { body: string; bodyHtml: string } => {
+      let body = '';
+      let bodyHtml = '';
+
+      const decode = (data: string) =>
+        Buffer.from(data, 'base64').toString('utf-8');
+
+      const traverseParts = (parts: any[]) => {
+        for (const part of parts) {
+          if (part.mimeType === 'text/plain' && part.body?.data) {
+            body = decode(part.body.data);
+          } else if (part.mimeType === 'text/html' && part.body?.data) {
+            bodyHtml = decode(part.body.data);
+          } else if (part.parts) {
+            traverseParts(part.parts);
+          }
+        }
+      };
+
+      if (payload.parts) {
+        traverseParts(payload.parts);
+      } else if (payload.body?.data) {
+        if (payload.mimeType === 'text/html') {
+          bodyHtml = decode(payload.body.data);
+        } else {
+          body = decode(payload.body.data);
+        }
+      }
+
+      return { body, bodyHtml };
+    };
+
     const messages: InboxMessage[] = [];
     for (const ref of list.data.messages ?? []) {
       const msg = await gmail.users.messages.get({
         userId: 'me',
         id: ref.id!,
-        format: 'metadata',
-        metadataHeaders: ['From', 'Subject', 'Date', 'X-Failed-Recipients'],
+        format: 'full',
       });
       const headers = msg.data.payload?.headers ?? [];
       const header = (name: string) =>
         headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value ?? '';
+      
       const fromRaw = header('From');
-      const emailMatch = fromRaw.match(/<([^>]+)>/);
+      const fromEmailMatch = fromRaw.match(/<([^>]+)>/);
+      const fromEmail = (fromEmailMatch ? fromEmailMatch[1] : fromRaw).trim().toLowerCase();
+      const fromNameMatch = fromRaw.match(/^([^<]+)/);
+      const fromName = fromNameMatch ? fromNameMatch[1].replace(/"/g, '').trim() : null;
+
+      const toRaw = header('To');
+      const toEmailMatch = toRaw.match(/<([^>]+)>/);
+      const to = (toEmailMatch ? toEmailMatch[1] : toRaw).trim().toLowerCase();
+
+      const { body, bodyHtml } = msg.data.payload ? getGmailMessageBody(msg.data.payload) : { body: '', bodyHtml: '' };
+
+      const labels = msg.data.labelIds ?? [];
+      const isSpam = labels.includes('SPAM');
+      const isTrash = labels.includes('TRASH');
+
       messages.push({
         providerMessageId: ref.id!,
-        fromEmail: (emailMatch ? emailMatch[1] : fromRaw).trim().toLowerCase(),
+        fromEmail,
+        fromName,
+        to,
         subject: header('Subject'),
         date: header('Date') ? new Date(header('Date')) : new Date(Number(msg.data.internalDate)),
+        body: body || msg.data.snippet || '',
+        bodyHtml: bodyHtml || body || msg.data.snippet || '',
         failedRecipient: header('X-Failed-Recipients') || null,
+        isSpam,
+        isTrash,
       });
     }
     return messages;

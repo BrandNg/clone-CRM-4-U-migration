@@ -121,7 +121,7 @@ export class OutlookAdapter implements EmailAdapter {
     const url =
       'https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages' +
       `?$filter=receivedDateTime ge ${since.toISOString()}` +
-      '&$select=from,subject,receivedDateTime&$orderby=receivedDateTime desc&$top=50';
+      '&$select=from,toRecipients,subject,receivedDateTime,body&$orderby=receivedDateTime desc&$top=50';
 
     let token = this.config.accessToken;
     let res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -135,13 +135,28 @@ export class OutlookAdapter implements EmailAdapter {
     }
 
     const data = await res.json();
-    return ((data.value ?? []) as any[]).map((m) => ({
-      providerMessageId: m.id,
-      fromEmail: (m.from?.emailAddress?.address ?? '').toLowerCase(),
-      subject: m.subject ?? '',
-      date: new Date(m.receivedDateTime),
-      failedRecipient: null,
-    }));
+    return ((data.value ?? []) as any[]).map((m) => {
+      const fromEmail = (m.from?.emailAddress?.address ?? '').toLowerCase();
+      const fromName = m.from?.emailAddress?.name ?? null;
+      const to = (m.toRecipients?.[0]?.emailAddress?.address ?? '').toLowerCase();
+      
+      const isHtml = m.body?.contentType === 'html';
+      const rawBody = m.body?.content ?? '';
+      
+      return {
+        providerMessageId: m.id,
+        fromEmail,
+        fromName,
+        to,
+        subject: m.subject ?? '',
+        date: new Date(m.receivedDateTime),
+        body: isHtml ? rawBody.replace(/<[^>]+>/g, '').trim() : rawBody,
+        bodyHtml: isHtml ? rawBody : rawBody,
+        failedRecipient: null,
+        isSpam: false,
+        isTrash: false,
+      };
+    });
   }
 }
 

@@ -23,10 +23,16 @@ export interface InboxMessage {
   /** Provider's unique message ID (Gmail msg.id, Graph message.id, IMAP UID). */
   providerMessageId: string;
   fromEmail: string;
+  fromName?: string | null;
+  to?: string;
   subject: string;
   date: Date;
+  body?: string | null;
+  bodyHtml?: string | null;
   /** Recipient extracted from an NDR header (X-Failed-Recipients), if present. */
   failedRecipient?: string | null;
+  isSpam?: boolean;
+  isTrash?: boolean;
 }
 
 export interface EmailAdapter {

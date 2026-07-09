@@ -318,6 +318,7 @@ model Lead {
   activities          Activity[]
   reminders           Reminder[]
   outboundMessages    OutboundMessage[]
+  inboundMessages     InboundMessage[]
   sequenceEnrollments SequenceEnrollment[]
   importRows          ImportRow[]
 
@@ -560,6 +561,7 @@ model EmailAccount {
   tenantId         String
   tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   outboundMessages OutboundMessage[]
+  inboundMessages  InboundMessage[]
 
   @@index([userId])
   @@index([tenantId])
@@ -796,6 +798,7 @@ model Tenant {
   auditLogs          AuditLog[]
   jobRuns            JobRun[]
   outboundMessages   OutboundMessage[]
+  inboundMessages    InboundMessage[]
   suppressionEntries SuppressionEntry[]
   sequenceEnrollments SequenceEnrollment[]
   importBatches      ImportBatch[]
@@ -815,6 +818,33 @@ model Attachment {
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([templateId])
+  @@index([tenantId])
+}
+
+model InboundMessage {
+  id                String        @id @default(cuid())
+  accountId         String
+  account           EmailAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  leadId            String?
+  lead              Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  fromEmail         String
+  fromName          String?
+  to                String
+  subject           String?
+  body              String?       @db.Text
+  bodyHtml          String?       @db.Text
+  providerMessageId String        @unique
+  date              DateTime
+  isRead            Boolean       @default(false)
+  isSpam            Boolean       @default(false)
+  isTrash           Boolean       @default(false)
+  tenantId          String
+  tenant            Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
+
+  @@index([accountId])
+  @@index([leadId])
+  @@index([providerMessageId])
   @@index([tenantId])
 }
 

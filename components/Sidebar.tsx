@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
+  Inbox,
 } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 
@@ -59,6 +60,7 @@ export default function Sidebar({ userRole = 'sdr' }: SidebarProps) {
         ...(userRole === 'director' ? [{ name: 'Director', href: '/director', icon: Briefcase }] : []),
         ...(userRole === 'director' || userRole === 'floor_manager' ? [{ name: 'Admin', href: '/admin/jobs', icon: Shield }] : []),
         { name: 'Leads', href: '/leads', icon: Users },
+        { name: 'Inbox', href: '/inbox', icon: Inbox },
         { name: 'Sequences', href: '/sequences', icon: Repeat },
         { name: 'Performance', href: '/sequences/performance', icon: TrendingUp },
         { name: 'Templates', href: '/templates', icon: FileText },

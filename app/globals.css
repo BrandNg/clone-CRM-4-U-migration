@@ -376,3 +376,10 @@ body[data-theme="light"] .glass-sidebar {
   animation-timing-function: linear;
   animation-fill-mode: forwards;
 }
+
+/* ─── CONTENTEDITABLE PLACEHOLDER ─── */
+.empty-placeholder:empty:before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+}

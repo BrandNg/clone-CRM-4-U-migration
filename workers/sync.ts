@@ -40,52 +40,84 @@ async function handleEmailSync(payload: EmailSyncPayload) {
   const bounceMessages = messages.filter(m => isBounceMessage(m));
   const replyMessages = messages.filter(m => !isBounceMessage(m) && !isAutoReply(m) && m.fromEmail);
 
-  const allEmails = [
-    ...bounceMessages.map(m => extractBouncedRecipient(m)).filter(Boolean),
-    ...replyMessages.map(m => m.fromEmail).filter(Boolean),
-  ] as string[];
-
-  if (allEmails.length > 0) {
+  // Load matched leads for ALL incoming emails
+  const incomingEmails = messages.map(m => m.fromEmail).filter(Boolean) as string[];
+  const leadByEmail = new Map<string, { id: string; email: string; sequenceId: string | null; sequenceStatus: string | null; emailInvalid: boolean }>();
+  
+  if (incomingEmails.length > 0) {
     const existingLeads = await prisma.lead.findMany({
       where: {
-        email: { in: allEmails, mode: 'insensitive' },
+        email: { in: incomingEmails, mode: 'insensitive' },
         assignedToId: account.userId,
       },
       select: { id: true, email: true, sequenceId: true, sequenceStatus: true, emailInvalid: true },
     });
-
-    const leadByEmail = new Map<string, typeof existingLeads[0]>();
     for (const l of existingLeads) {
       leadByEmail.set(l.email.toLowerCase(), l);
     }
+  }
 
-    for (const msg of bounceMessages) {
-      const bounced = extractBouncedRecipient(msg);
-      if (!bounced) continue;
-      const lead = leadByEmail.get(bounced.toLowerCase());
-      if (!lead || lead.emailInvalid) continue;
-
-      const bounceType = classifyBounceType(msg.subject);
-      await handleApplyBounce({
-        providerMessageId: msg.providerMessageId,
-        leadId: lead.id,
-        accountId,
-        bounceType,
+  // Save all non-bounce incoming messages to InboundMessage table
+  for (const msg of messages) {
+    if (isBounceMessage(msg) || !msg.fromEmail) continue;
+    
+    try {
+      const exists = await prisma.inboundMessage.findUnique({
+        where: { providerMessageId: msg.providerMessageId },
+        select: { id: true }
       });
-      bounces++;
+      
+      if (!exists) {
+        const lead = leadByEmail.get(msg.fromEmail.toLowerCase());
+        await prisma.inboundMessage.create({
+          data: {
+            accountId,
+            leadId: lead?.id ?? null,
+            fromEmail: msg.fromEmail,
+            fromName: msg.fromName ?? null,
+            to: msg.to || account.email,
+            subject: msg.subject,
+            body: msg.body ?? '',
+            bodyHtml: msg.bodyHtml ?? msg.body ?? '',
+            providerMessageId: msg.providerMessageId,
+            date: msg.date,
+            isSpam: msg.isSpam ?? false,
+            isTrash: msg.isTrash ?? false,
+            tenantId: account.tenantId,
+          }
+        });
+      }
+    } catch (saveErr) {
+      console.error(`[sync:handleEmailSync] Failed to save message ${msg.providerMessageId}:`, saveErr);
     }
+  }
 
-    for (const msg of replyMessages) {
-      const lead = leadByEmail.get(msg.fromEmail!.toLowerCase());
-      if (!lead || !lead.sequenceId || lead.sequenceStatus !== 'active') continue;
+  for (const msg of bounceMessages) {
+    const bounced = extractBouncedRecipient(msg);
+    if (!bounced) continue;
+    const lead = leadByEmail.get(bounced.toLowerCase());
+    if (!lead || lead.emailInvalid) continue;
 
-      await handleApplyReply({
-        providerMessageId: msg.providerMessageId,
-        leadId: lead.id,
-        accountId,
-      });
-      replies++;
-    }
+    const bounceType = classifyBounceType(msg.subject);
+    await handleApplyBounce({
+      providerMessageId: msg.providerMessageId,
+      leadId: lead.id,
+      accountId,
+      bounceType,
+    });
+    bounces++;
+  }
+
+  for (const msg of replyMessages) {
+    const lead = leadByEmail.get(msg.fromEmail!.toLowerCase());
+    if (!lead || !lead.sequenceId || lead.sequenceStatus !== 'active') continue;
+
+    await handleApplyReply({
+      providerMessageId: msg.providerMessageId,
+      leadId: lead.id,
+      accountId,
+    });
+    replies++;
   }
 
   await prisma.emailAccount.update({
