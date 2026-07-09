@@ -11,6 +11,11 @@ export interface SendEmailOptions {
   html?: string;
   text?: string;
   replyTo?: string;
+  attachments?: Array<{
+    filename: string;
+    content: string | Buffer;
+    contentType?: string;
+  }>;
 }
 
 /** A message fetched from a connected inbox (metadata only — no body). */

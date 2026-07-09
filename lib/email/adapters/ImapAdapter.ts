@@ -41,6 +41,7 @@ export class ImapAdapter implements EmailAdapter {
       html: options.html,
       text: options.text,
       replyTo: options.replyTo,
+      attachments: options.attachments,
     });
     return info.messageId;
   }

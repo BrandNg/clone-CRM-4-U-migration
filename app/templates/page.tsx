@@ -67,6 +67,10 @@ export default function TemplatesPage() {
   const [abVariants, setAbVariants] = useState<AbTestVariant[]>([]);
   const [abOpen, setAbOpen] = useState(false);
   const [creatingAb, setCreatingAb] = useState(false);
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [isHtmlView, setIsHtmlView] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   const loadTemplates = useCallback(async () => {
     const res = await fetch('/api/templates');
@@ -96,6 +100,18 @@ export default function TemplatesPage() {
     }
   }, []);
 
+  const fetchAttachments = useCallback(async (templateId: string) => {
+    try {
+      const res = await fetch(`/api/templates/${templateId}/attachments`);
+      if (res.ok) {
+        const data = await res.json();
+        setAttachments(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch attachments:', err);
+    }
+  }, []);
+
   const handleSelectTemplate = (temp: Template) => {
     setSelectedTemp(temp);
     setName(temp.name);
@@ -106,10 +122,117 @@ export default function TemplatesPage() {
     setActivePane('edit');
     setAbOpen(false);
     loadAbVariants(temp.id);
+    fetchAttachments(temp.id);
+
+    // Set editor content
+    if (editorRef.current) {
+      editorRef.current.innerHTML = temp.body;
+    }
+  };
+
+  // Keep editor synced when body changes externally (but not during typing)
+  useEffect(() => {
+    if (editorRef.current && selectedTemp && editorRef.current.innerHTML !== body) {
+      if (document.activeElement !== editorRef.current) {
+        editorRef.current.innerHTML = body;
+      }
+    }
+  }, [body, selectedTemp]);
+
+  const insertMergeTagWysiwyg = (tag: string) => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      const tagText = `{{${tag}}}`;
+      const sel = window.getSelection();
+      if (sel && sel.getRangeAt && sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        const node = document.createTextNode(tagText);
+        range.insertNode(node);
+        const newRange = document.createRange();
+        newRange.setStartAfter(node);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        setBody(editorRef.current.innerHTML);
+      } else {
+        editorRef.current.innerHTML += ` ${tagText}`;
+        setBody(editorRef.current.innerHTML);
+      }
+    }
+  };
+
+  const execEditorCommand = (command: string, value: string = '') => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      document.execCommand(command, false, value);
+      setBody(editorRef.current.innerHTML);
+    }
+  };
+
+  const handleUploadAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedTemp || !e.target.files?.[0]) return;
+    const file = e.target.files[0];
+    
+    // Check file size (limit 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File size must be less than 5MB', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploading(true);
+    try {
+      const res = await fetch(`/api/templates/${selectedTemp.id}/attachments`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const newAtt = await res.json();
+        setAttachments((prev) => [...prev, newAtt]);
+        showToast('Attachment uploaded successfully!', 'success');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to upload attachment', 'error');
+      }
+    } catch {
+      showToast('Network error uploading attachment', 'error');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!selectedTemp) return;
+    try {
+      const res = await fetch(`/api/templates/${selectedTemp.id}/attachments/${attachmentId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+        showToast('Attachment deleted', 'info');
+      } else {
+        showToast('Failed to delete attachment', 'error');
+      }
+    } catch {
+      showToast('Network error deleting attachment', 'error');
+    }
   };
 
   const handleInsertMergeField = (field: string) => {
-    setBody((prev) => prev + ` {{${field}}}`);
+    const tag = `{{${field}}}`;
+    if (channel === 'email') {
+      if (!isHtmlView) {
+        insertMergeTagWysiwyg(field);
+      } else {
+        setBody((prev) => prev + ` ${tag}`);
+      }
+    } else {
+      setBody((prev) => prev + ` ${tag}`);
+    }
   };
 
   const handleSaveTemplate = async () => {
@@ -516,6 +639,8 @@ export default function TemplatesPage() {
                           {MERGE_FIELDS.map((f) => (
                             <button
                               key={f}
+                              type="button"
+                              onMouseDown={(e) => e.preventDefault()}
                               onClick={() => handleInsertMergeField(f)}
                               className="px-1.5 py-0.5 border border-card-border bg-background hover:bg-card-border text-[9px] font-semibold text-text-secondary rounded transition-colors"
                             >
@@ -524,11 +649,123 @@ export default function TemplatesPage() {
                           ))}
                         </div>
                       </div>
-                      <textarea
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                        className="w-full bg-background border border-card-border rounded-xl p-3 text-text-primary focus:outline-none focus:border-brand-red h-48 placeholder-text-muted resize-none leading-relaxed font-mono text-xs"
-                      />
+
+                      {channel === 'email' ? (
+                        <div className="space-y-2">
+                          {/* Rich Text Editor Toolbar */}
+                          <div className="flex items-center justify-between bg-background border border-card-border rounded-lg p-1">
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onMouseDown={(e) => { e.preventDefault(); execEditorCommand('bold'); }}
+                                className="p-1.5 hover:bg-card-border/40 text-text-secondary hover:text-text-primary rounded text-xs font-extrabold font-mono transition-colors"
+                                title="Bold (Ctrl+B)"
+                              >
+                                B
+                              </button>
+                              <button
+                                type="button"
+                                onMouseDown={(e) => { e.preventDefault(); execEditorCommand('italic'); }}
+                                className="p-1.5 hover:bg-card-border/40 text-text-secondary hover:text-text-primary rounded text-xs italic font-serif transition-colors"
+                                title="Italic (Ctrl+I)"
+                              >
+                                I
+                              </button>
+                              <button
+                                type="button"
+                                onMouseDown={(e) => { e.preventDefault(); execEditorCommand('underline'); }}
+                                className="p-1.5 hover:bg-card-border/40 text-text-secondary hover:text-text-primary rounded text-xs underline transition-colors"
+                                title="Underline (Ctrl+U)"
+                              >
+                                U
+                              </button>
+                              <button
+                                type="button"
+                                onMouseDown={(e) => { e.preventDefault(); execEditorCommand('insertUnorderedList'); }}
+                                className="p-1.5 hover:bg-card-border/40 text-text-secondary hover:text-text-primary rounded text-xs font-mono transition-colors"
+                                title="Bullet List"
+                              >
+                                • List
+                              </button>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setIsHtmlView(!isHtmlView)}
+                              className={`px-2 py-1 rounded text-[9px] font-bold font-mono border transition-colors ${
+                                isHtmlView
+                                  ? 'bg-brand-red/10 border-brand-red/20 text-brand-red'
+                                  : 'border-card-border text-text-secondary hover:text-text-primary'
+                              }`}
+                            >
+                              {isHtmlView ? 'Rich Text Editor' : 'Edit HTML Code'}
+                            </button>
+                          </div>
+
+                          {/* Editor Content Area */}
+                          {isHtmlView ? (
+                            <textarea
+                              value={body}
+                              onChange={(e) => setBody(e.target.value)}
+                              className="w-full bg-background border border-card-border rounded-xl p-3 text-text-primary focus:outline-none focus:border-brand-red h-48 placeholder-text-muted resize-none leading-relaxed font-mono text-xs"
+                              placeholder="<p>Write your raw HTML here...</p>"
+                            />
+                          ) : (
+                            <div
+                              ref={editorRef}
+                              contentEditable
+                              onInput={(e) => setBody(e.currentTarget.innerHTML)}
+                              className="w-full bg-background border border-card-border rounded-xl p-3 text-text-primary focus:outline-none focus:border-brand-red h-48 placeholder-text-muted overflow-y-auto leading-relaxed font-sans text-xs focus:ring-1 focus:ring-brand-red/35 outline-none"
+                              style={{ minHeight: '12rem' }}
+                            />
+                          )}
+
+                          {/* Attachments Section */}
+                          <div className="border border-card-border rounded-xl p-3 bg-background/30 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold font-mono text-text-muted uppercase">Template Attachments</span>
+                              <label className="cursor-pointer px-2 py-1 bg-background hover:bg-card-border/40 border border-card-border rounded text-[9px] font-bold font-mono text-text-secondary transition-colors">
+                                {uploading ? 'Uploading...' : '+ Attach File'}
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  disabled={uploading}
+                                  onChange={handleUploadAttachment}
+                                />
+                              </label>
+                            </div>
+
+                            {attachments.length === 0 ? (
+                              <p className="text-[10px] text-text-muted italic">No attachments uploaded yet (Max 5MB per file).</p>
+                            ) : (
+                              <div className="space-y-1.5">
+                                {attachments.map((att) => (
+                                  <div key={att.id} className="flex items-center justify-between bg-card-bg border border-card-border rounded-lg px-2.5 py-1.5 text-[10px]">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <span className="text-xs">📎</span>
+                                      <span className="font-medium text-text-primary truncate" title={att.name}>{att.name}</span>
+                                      <span className="text-[8px] text-text-muted font-mono uppercase">({att.contentType.split('/')[1] || att.contentType})</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteAttachment(att.id)}
+                                      className="text-text-muted hover:text-brand-red p-0.5 rounded transition-colors"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <textarea
+                          value={body}
+                          onChange={(e) => setBody(e.target.value)}
+                          className="w-full bg-background border border-card-border rounded-xl p-3 text-text-primary focus:outline-none focus:border-brand-red h-48 placeholder-text-muted resize-none leading-relaxed font-mono text-xs"
+                        />
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -542,9 +779,17 @@ export default function TemplatesPage() {
                           </p>
                         </div>
                       )}
-                      <div className="text-xs text-text-primary whitespace-pre-line leading-relaxed font-sans">
-                        {getPreviewText() || '(Empty Template)'}
-                      </div>
+                      
+                      {channel === 'email' ? (
+                        <div 
+                          className="text-xs text-text-primary leading-relaxed font-sans select-text"
+                          dangerouslySetInnerHTML={{ __html: getPreviewText() || '<span class="text-text-muted italic">(Empty Template)</span>' }}
+                        />
+                      ) : (
+                        <div className="text-xs text-text-primary whitespace-pre-line leading-relaxed font-sans">
+                          {getPreviewText() || '(Empty Template)'}
+                        </div>
+                      )}
                     </div>
                     <div className="bg-brand-red/5 border border-brand-red/10 rounded-xl p-3 text-[10px] text-text-secondary leading-relaxed font-mono flex gap-2">
                       <span className="text-xs">💡</span>

@@ -53,24 +53,25 @@ export class GmailAdapter implements EmailAdapter {
       }
     });
 
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const MailComposer = (await import('nodemailer/lib/mail-composer')).default;
+    const mail = new MailComposer({
+      from: options.from,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text,
+      replyTo: options.replyTo,
+      attachments: options.attachments,
+    });
 
-    const messageParts = [
-      `From: ${options.from}`,
-      `To: ${options.to}`,
-      ...(options.replyTo ? [`Reply-To: ${options.replyTo}`] : []),
-      `Subject: ${options.subject}`,
-      'MIME-Version: 1.0',
-      'Content-Type: text/html; charset=UTF-8',
-      '',
-      options.html ?? options.text ?? '',
-    ];
-
-    const raw = Buffer.from(messageParts.join('\r\n'))
+    const rawMessageBuffer = await mail.compile().build();
+    const raw = rawMessageBuffer
       .toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
+
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
     const msg = await gmail.users.messages.send({
       userId: 'me',

@@ -5,6 +5,20 @@ import type { EmailSendPayload } from '@/lib/bullmq/types';
 import { EmailService } from '@/lib/email/EmailService';
 import { renderTemplate } from '@/lib/templates/render';
 
+function isHtml(text: string): boolean {
+  return /<[a-z][\s\S]*>/i.test(text);
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 async function atomicReserveQuota(accountId: string): Promise<boolean> {
   const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   const result = await prisma.$executeRaw`
@@ -99,13 +113,46 @@ async function handleEmailSend(payload: EmailSendPayload) {
     });
     if (!account) throw new Error(`Email account not found: ${accountId}`);
 
+    // Fetch attachments if templateId is present
+    const attachments = existing.templateId
+      ? await prisma.attachment.findMany({ where: { templateId: existing.templateId } })
+      : [];
+
+    const mappedAttachments = attachments.map((att) => ({
+      filename: att.name,
+      content: Buffer.from(att.content, 'base64'),
+      contentType: att.contentType,
+    }));
+
+    // Append signature if available
+    let bodyWithSig = finalBody;
+    if (account.signature) {
+      if (isHtml(finalBody)) {
+        bodyWithSig = `${finalBody}<br><br>--<br>${account.signature}`;
+      } else {
+        bodyWithSig = `${finalBody}\n\n--\n${stripHtml(account.signature)}`;
+      }
+    }
+
+    // Prepare text and HTML versions
+    let textPayload: string;
+    let htmlPayload: string;
+    if (isHtml(bodyWithSig)) {
+      htmlPayload = bodyWithSig;
+      textPayload = stripHtml(bodyWithSig);
+    } else {
+      textPayload = bodyWithSig;
+      htmlPayload = `<div style="font-family: sans-serif; white-space: pre-wrap;">${bodyWithSig}</div>`;
+    }
+
     const emailService = await EmailService.fromAccount(account);
     providerMessageId = await emailService.send({
       from: account.email,
       to,
       subject: finalSubject,
-      text: finalBody,
-      html: finalBody.replace(/\n/g, '<br>'),
+      text: textPayload,
+      html: htmlPayload,
+      attachments: mappedAttachments,
     });
   } catch (sendErr: unknown) {
     const errorMessage = sendErr instanceof Error ? sendErr.message : String(sendErr);

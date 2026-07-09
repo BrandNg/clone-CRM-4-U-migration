@@ -71,42 +71,41 @@ export class OutlookAdapter implements EmailAdapter {
   async send(options: SendEmailOptions): Promise<string | undefined> {
     let token = this.config.accessToken;
 
-    const payload: any = {
-      message: {
-        subject: options.subject,
-        body: {
-          contentType: options.html ? 'HTML' : 'Text',
-          content: options.html ?? options.text ?? '',
+    const MailComposer = (await import('nodemailer/lib/mail-composer')).default;
+    const mail = new MailComposer({
+      from: options.from,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text,
+      replyTo: options.replyTo,
+      attachments: options.attachments,
+    });
+
+    const rawMessageBuffer = await mail.compile().build();
+    const rawMime = rawMessageBuffer.toString('utf-8');
+
+    const sendRequest = async (accessToken: string) => {
+      return fetch(GRAPH_SEND_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'text/plain',
         },
-        toRecipients: [{ emailAddress: { address: options.to } }],
-        ...(options.replyTo ? { replyTo: [{ emailAddress: { address: options.replyTo } }] } : {}),
-      },
+        body: rawMime,
+      });
     };
 
-    let res = await fetch(GRAPH_SEND_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+    let res = await sendRequest(token);
 
     // Token expired — refresh and retry once
     if (res.status === 401) {
       token = await this.refreshAccessToken();
-      res = await fetch(GRAPH_SEND_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      res = await sendRequest(token);
     }
 
     if (!res.ok) {
-      const err = await res.json();
+      const err = await res.json().catch(() => ({}));
       throw new Error(`Microsoft Graph API error: ${err.error?.message ?? res.statusText}`);
     }
     // Graph sendMail returns 202 Accepted with no body — no message ID available for reconciliation.

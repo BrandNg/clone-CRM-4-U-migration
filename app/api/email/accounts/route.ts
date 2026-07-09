@@ -18,6 +18,7 @@ export async function GET(_req: NextRequest) {
       provider: true,
       isActive: true,
       lastSyncAt: true,
+      signature: true,
       createdAt: true,
     },
   });

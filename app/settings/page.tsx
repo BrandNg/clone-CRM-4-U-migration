@@ -31,6 +31,7 @@ interface EmailAccount {
   email: string;
   provider: string;
   isActive: boolean;
+  signature?: string | null;
 }
 
 // useSearchParams() requires a Suspense boundary for static prerendering
@@ -140,6 +141,42 @@ function SettingsPageInner() {
   const [defaultLeadView, setDefaultLeadView] = useState<'kanban' | 'table'>('kanban');
   const [itemsPerPage, setItemsPerPage] = useState<number>(25);
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({});
+
+  const [editingSignatureAccountId, setEditingSignatureAccountId] = useState<string | null>(null);
+  const [signatureText, setSignatureText] = useState('');
+  const [isSavingSignature, setIsSavingSignature] = useState(false);
+
+  const handleStartEditSignature = (account: EmailAccount) => {
+    setEditingSignatureAccountId(account.id);
+    setSignatureText(account.signature ?? '');
+  };
+
+  const handleSaveSignature = async () => {
+    if (!editingSignatureAccountId) return;
+    setIsSavingSignature(true);
+    try {
+      const res = await fetch(`/api/email/accounts/${editingSignatureAccountId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signature: signatureText || null }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setConnectedEmails((prev) =>
+          prev.map((e) => (e.id === editingSignatureAccountId ? { ...e, signature: updated.signature } : e))
+        );
+        setEditingSignatureAccountId(null);
+        setSignatureText('');
+        showToast('Email signature updated!', 'success');
+      } else {
+        showToast('Failed to save email signature', 'error');
+      }
+    } catch {
+      showToast('Network error saving email signature', 'error');
+    } finally {
+      setIsSavingSignature(false);
+    }
+  };
 
   useEffect(() => {
     const savedView = localStorage.getItem('crm:defaultLeadView');
@@ -738,21 +775,70 @@ function SettingsPageInner() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[9px] font-bold border border-green-500/20 rounded font-mono">
+                  <div className="flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[9px] font-bold border border-green-500/20 rounded font-mono mr-1.5">
                       ACTIVE
                     </span>
+                    <button
+                      onClick={() => handleStartEditSignature(item)}
+                      className="p-1 hover:bg-brand-orange/10 text-text-muted hover:text-brand-orange rounded"
+                      title="Edit Email Signature"
+                    >
+                      <Pencil className="w-4.5 h-4.5" />
+                    </button>
                     <button
                       onClick={() => handleDeleteEmail(item.id)}
                       className="p-1 hover:bg-brand-red/10 text-text-muted hover:text-brand-red rounded"
                       title="Disconnect Account"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4.5 h-4.5" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
+
+            {editingSignatureAccountId && (
+              <div className="border border-brand-orange/20 rounded-xl p-4 bg-brand-orange/[0.01] space-y-3 animate-in fade-in duration-200 text-xs">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold font-mono text-brand-orange uppercase">
+                    Edit Email Signature for {connectedEmails.find(e => e.id === editingSignatureAccountId)?.email}
+                  </h4>
+                  <button
+                    onClick={() => { setEditingSignatureAccountId(null); setSignatureText(''); }}
+                    className="p-1 hover:bg-card-border/60 text-text-muted hover:text-text-primary rounded"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] text-text-secondary leading-relaxed">
+                    This signature will be appended to the end of all emails sent from this account (HTML supported).
+                  </p>
+                  <textarea
+                    value={signatureText}
+                    onChange={(e) => setSignatureText(e.target.value)}
+                    className="w-full bg-background border border-card-border rounded-xl p-3 text-text-primary focus:outline-none focus:border-brand-red h-24 placeholder-text-muted resize-none leading-relaxed font-mono text-xs"
+                    placeholder="Best regards,<br><b>Dean</b><br>Director"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => { setEditingSignatureAccountId(null); setSignatureText(''); }}
+                    className="px-3 py-1.5 bg-background border border-card-border text-text-secondary hover:text-text-primary text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveSignature}
+                    disabled={isSavingSignature}
+                    className="px-3 py-1.5 bg-brand-orange hover:bg-brand-orange-hover text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-60"
+                  >
+                    {isSavingSignature ? 'Saving...' : 'Save Signature'}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Provider status badges */}
             {providerStatus !== null && (
