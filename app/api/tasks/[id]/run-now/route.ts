@@ -6,7 +6,8 @@ import { handleApiError } from '@/lib/api/errors';
 import { enqueue } from '@/lib/bullmq/enqueue';
 import { JobType } from '@/lib/bullmq/types';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const userOrRes = await requireAuth();
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
