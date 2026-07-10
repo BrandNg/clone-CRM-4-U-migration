@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth';
 import type { SessionUser } from '@/lib/auth';
-import { enqueue } from '@/lib/bullmq/enqueue';
+import { enqueueImmediate } from '@/lib/bullmq/enqueue';
 import { JobType } from '@/lib/bullmq/types';
 import { pauseSequence, unenrollLead, createTaskForStep } from '@/lib/sequences/engine';
 
@@ -41,7 +41,7 @@ export async function POST(
             where: { id: task.id },
             data: { dueDate: new Date() }
           });
-          await enqueue(JobType.SEQUENCE_EXECUTE_TASK, { taskId: task.id }, { delay: 0, tenantId: user.tenantId });
+          await enqueueImmediate(JobType.SEQUENCE_EXECUTE_TASK, { taskId: task.id }, { tenantId: user.tenantId });
           processedCount++;
         }
       } else if (action === 'pause' && enr.status === 'active') {

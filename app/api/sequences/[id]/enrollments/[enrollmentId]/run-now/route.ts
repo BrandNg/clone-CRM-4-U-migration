@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import type { SessionUser } from '@/lib/auth';
-import { enqueue } from '@/lib/bullmq/enqueue';
+import { enqueueImmediate } from '@/lib/bullmq/enqueue';
 import { JobType } from '@/lib/bullmq/types';
 import { advanceSequence } from '@/lib/sequences/engine';
 
@@ -55,11 +55,12 @@ export async function POST(
         data: { dueDate: new Date() },
       });
 
-      // 2. Enqueue execute workflow with 0 delay (runs instantly on worker)
-      await enqueue(
+      // 2. Promote the scheduled job so it runs instantly on the worker (a plain
+      //    delay:0 enqueue collides with the existing delayed job and gets dropped).
+      await enqueueImmediate(
         JobType.SEQUENCE_EXECUTE_TASK,
         { taskId: task.id },
-        { delay: 0, tenantId: user.tenantId! }
+        { tenantId: user.tenantId! }
       );
 
       return NextResponse.json({ success: true, message: 'Email sequence execution enqueued.' });

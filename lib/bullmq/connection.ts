@@ -10,10 +10,12 @@ function getRedisConfig(): { url: string; opts: RedisOptions } {
     opts: {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-      retryStrategy: (times: number) => {
-        if (times > 10) return null;
-        return Math.min(times * 200, 5000);
-      },
+      // Never give up reconnecting. The worker is an always-on process: if it boots
+      // before Redis is ready (compose ordering, ElastiCache cold start) or Redis blips,
+      // returning null here would permanently detach the connection while the process
+      // stays alive — jobs then pile up at status='queued' and never execute. Keep
+      // retrying with a capped backoff so the worker self-heals.
+      retryStrategy: (times: number) => Math.min(times * 200, 5000),
       lazyConnect: true,
       tls: isTls ? {} : undefined,
     },

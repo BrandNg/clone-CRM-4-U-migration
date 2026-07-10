@@ -12,6 +12,11 @@ export async function POST(
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
 
+  // Guard: a missing tenant would let this send from another tenant's lead/account.
+  if (!user.tenantId) {
+    return NextResponse.json({ error: 'No tenant context' }, { status: 403 });
+  }
+
   const { id: threadKey } = await params;
 
   try {
@@ -25,9 +30,9 @@ export async function POST(
       return NextResponse.json({ error: 'Lead ID is required' }, { status: 400 });
     }
 
-    // 1. Fetch Lead details
-    const lead = await prisma.lead.findUnique({
-      where: { id: leadId },
+    // 1. Fetch Lead details — scoped to the caller's tenant.
+    const lead = await prisma.lead.findFirst({
+      where: { id: leadId, tenantId: user.tenantId },
       select: { id: true, email: true, assignedToId: true },
     });
 

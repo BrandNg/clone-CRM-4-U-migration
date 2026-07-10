@@ -21,6 +21,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
+import DOMPurify from 'isomorphic-dompurify';
 import Link from 'next/link';
 
 interface Message {
@@ -187,7 +188,7 @@ export default function InboxPage() {
 
     setSendingReply(true);
     try {
-      const res = await fetch(`/api/inbox/threads/${selectedThread.id}/reply`, {
+      const res = await fetch(`/api/inbox/threads/${encodeURIComponent(selectedThread.id)}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -476,11 +477,11 @@ export default function InboxPage() {
                           </span>
                         </div>
 
-                        {/* Email Body Content */}
+                        {/* Email Body Content — inbound HTML is attacker-controlled, sanitize before render */}
                         {msg.bodyHtml ? (
                           <div
                             className={`text-xs text-text-primary leading-relaxed font-sans select-text border-t border-card-border/40 pt-3 text-left ql-editor`}
-                            dangerouslySetInnerHTML={{ __html: msg.bodyHtml }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.bodyHtml) }}
                           />
                         ) : (
                           <div className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed font-sans border-t border-card-border/40 pt-3 text-left select-text">

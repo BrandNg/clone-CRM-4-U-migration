@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth, canAccessUser, canAccessLead } from '@/lib/auth';
 import type { SessionUser } from '@/lib/auth';
 import { handleApiError } from '@/lib/api/errors';
-import { enqueue } from '@/lib/bullmq/enqueue';
+import { enqueueImmediate } from '@/lib/bullmq/enqueue';
 import { JobType } from '@/lib/bullmq/types';
 
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
@@ -39,11 +39,12 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       data: { dueDate: new Date() },
     });
 
-    // Enqueue immediate execution
-    await enqueue(
+    // Enqueue immediate execution — promotes the already-scheduled delayed job so the
+    // send actually fast-forwards (a plain enqueue would collide with it and be dropped).
+    await enqueueImmediate(
       JobType.SEQUENCE_EXECUTE_TASK,
       { taskId: task.id },
-      { delay: 0, tenantId: user.tenantId! }
+      { tenantId: user.tenantId! }
     );
 
     return NextResponse.json({ success: true, taskId: task.id }, { status: 200 });

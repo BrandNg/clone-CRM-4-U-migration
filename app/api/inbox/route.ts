@@ -16,6 +16,11 @@ export async function GET(req: NextRequest) {
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
 
+  // Guard: without a tenant, Prisma would drop the tenant filter and leak cross-tenant mail.
+  if (!user.tenantId) {
+    return NextResponse.json({ error: 'No tenant context' }, { status: 403 });
+  }
+
   const { searchParams } = new URL(req.url);
   const folder = searchParams.get('folder') || 'inbox'; // inbox, sent, spam, trash
 
@@ -164,6 +169,11 @@ export async function PATCH(req: NextRequest) {
   const userOrRes = await requireAuth();
   if (userOrRes instanceof NextResponse) return userOrRes;
   const user = userOrRes as SessionUser;
+
+  // Guard: without a tenant, Prisma would drop the tenant filter and mutate cross-tenant mail.
+  if (!user.tenantId) {
+    return NextResponse.json({ error: 'No tenant context' }, { status: 403 });
+  }
 
   try {
     const { messageIds, action } = await req.json(); // action: read, unread, spam, trash, delete
