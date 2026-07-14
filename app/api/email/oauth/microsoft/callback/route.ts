@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import type { SessionUser } from '@/lib/auth';
-import { encrypt } from '@/lib/crypto';
 import { exchangeMicrosoftCode } from '@/lib/email/adapters/OutlookAdapter';
+import { upsertOAuthEmailAccount } from '@/lib/email/oauthAccounts';
 
 export async function GET(req: NextRequest) {
   const userOrRes = await requireAuth();
@@ -31,48 +30,23 @@ export async function GET(req: NextRequest) {
   try {
     const { email, accessToken, refreshToken, tokenExpiry } = await exchangeMicrosoftCode(code);
 
-    const [encAccessToken, encRefreshToken] = await Promise.all([
-      accessToken ? encrypt(accessToken) : Promise.resolve(null),
-      refreshToken ? encrypt(refreshToken) : Promise.resolve(null),
-    ]);
-
     if (!email) {
       return NextResponse.redirect(new URL('/settings?error=microsoft_no_email', req.url));
     }
 
-    // Check if user already connected this Outlook account
-    const existing = await prisma.emailAccount.findFirst({
-      where: { userId: user.id, email, provider: 'outlook' },
+    const result = await upsertOAuthEmailAccount({
+      user,
+      provider: 'outlook',
+      email,
+      accessToken,
+      refreshToken,
+      tokenExpiry,
     });
 
-    if (existing) {
-      await prisma.emailAccount.update({
-        where: { id: existing.id },
-        data: {
-          accessToken,
-          refreshToken,
-          encAccessToken,
-          encRefreshToken,
-          tokenExpiry,
-          isActive: true,
-          lastSyncAt: new Date(),
-        },
-      });
-    } else {
-      await prisma.emailAccount.create({
-        data: {
-          userId: user.id,
-          email,
-          provider: 'outlook',
-          accessToken,
-          refreshToken,
-          encAccessToken,
-          encRefreshToken,
-          tokenExpiry,
-          isActive: true,
-          lastSyncAt: new Date(),
-        },
-      });
+    if (!result.ok) {
+      const res = NextResponse.redirect(new URL('/settings?error=microsoft_missing_refresh_token', req.url));
+      res.cookies.delete('oauth_nonce_microsoft');
+      return res;
     }
 
     const res = NextResponse.redirect(new URL('/settings?success=outlook_connected', req.url));

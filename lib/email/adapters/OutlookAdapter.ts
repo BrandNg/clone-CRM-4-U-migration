@@ -57,9 +57,9 @@ export class OutlookAdapter implements EmailAdapter {
       await prisma.emailAccount.update({
         where: { id: this.config.accountId },
         data: {
-          accessToken: data.access_token,
+          accessToken: null,
           encAccessToken,
-          refreshToken: data.refresh_token ?? undefined,
+          refreshToken: data.refresh_token ? null : undefined,
           encRefreshToken,
           tokenExpiry: data.expires_in ? new Date(Date.now() + data.expires_in * 1000) : undefined,
         },

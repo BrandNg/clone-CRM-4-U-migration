@@ -34,6 +34,11 @@ interface EmailAccount {
   signature?: string | null;
 }
 
+interface OAuthProviderStatus {
+  configured: boolean;
+  missing: string[];
+}
+
 // useSearchParams() requires a Suspense boundary for static prerendering
 export default function SettingsPage() {
   return (
@@ -48,7 +53,7 @@ function SettingsPageInner() {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [providerStatus, setProviderStatus] = useState<{ gmail: boolean; outlook: boolean } | null>(null);
+  const [providerStatus, setProviderStatus] = useState<{ gmail: OAuthProviderStatus; outlook: OAuthProviderStatus } | null>(null);
 
   useEffect(() => {
     const error = searchParams.get('error');
@@ -64,12 +69,18 @@ function SettingsPageInner() {
       showToast('Google OAuth state mismatch — please try connecting again', 'error');
     } else if (error === 'google_token_exchange_failed') {
       showToast('Google token exchange failed — check your OAuth credentials', 'error');
+    } else if (error === 'google_missing_refresh_token') {
+      showToast('Google did not return a refresh token — remove the app grant in Google and reconnect', 'error');
     } else if (error === 'microsoft_auth_failed') {
       showToast('Microsoft OAuth failed — check your credentials and redirect URI', 'error');
     } else if (error === 'microsoft_invalid_state') {
       showToast('Microsoft OAuth state mismatch — please try connecting again', 'error');
     } else if (error === 'microsoft_token_exchange_failed') {
       showToast('Microsoft token exchange failed — check your OAuth credentials', 'error');
+    } else if (error === 'microsoft_missing_refresh_token') {
+      showToast('Microsoft did not return a refresh token — reconnect and confirm offline_access consent', 'error');
+    } else if (error === 'microsoft_no_email') {
+      showToast('Microsoft profile did not include an email address', 'error');
     } else if (success === 'gmail_connected') {
       showToast('Gmail connected successfully!', 'success');
     } else if (success === 'outlook_connected') {
@@ -258,12 +269,20 @@ function SettingsPageInner() {
   };
 
   const handleConnectGmail = () => {
+    if (providerStatus && !providerStatus.gmail.configured) {
+      showToast(`Gmail OAuth missing: ${providerStatus.gmail.missing.join(', ')}`, 'error');
+      return;
+    }
     const authUrl = `/api/email/oauth/google`;
     showToast('Redirecting to Google OAuth...', 'info');
     window.location.href = authUrl;
   };
 
   const handleConnectOutlook = () => {
+    if (providerStatus && !providerStatus.outlook.configured) {
+      showToast(`Outlook OAuth missing: ${providerStatus.outlook.missing.join(', ')}`, 'error');
+      return;
+    }
     const authUrl = `/api/email/oauth/microsoft`;
     showToast('Redirecting to Microsoft OAuth...', 'info');
     window.location.href = authUrl;
@@ -347,6 +366,8 @@ function SettingsPageInner() {
       default: return provider;
     }
   };
+
+  const missingText = (status: OAuthProviderStatus) => status.missing.join(', ');
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -843,28 +864,28 @@ function SettingsPageInner() {
             {/* Provider status badges */}
             {providerStatus !== null && (
               <div className="flex flex-wrap gap-2 text-[10px] font-mono">
-                <span className={`flex items-center gap-1 px-2 py-0.5 rounded border font-semibold ${providerStatus.gmail ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-red-500/30 bg-red-500/10 text-red-400'}`}>
-                  {providerStatus.gmail ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                  Gmail OAuth {providerStatus.gmail ? 'configured' : 'not configured'}
+                <span className={`flex items-center gap-1 px-2 py-0.5 rounded border font-semibold ${providerStatus.gmail.configured ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-red-500/30 bg-red-500/10 text-red-400'}`}>
+                  {providerStatus.gmail.configured ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                  Gmail OAuth {providerStatus.gmail.configured ? 'configured' : 'not configured'}
                 </span>
-                <span className={`flex items-center gap-1 px-2 py-0.5 rounded border font-semibold ${providerStatus.outlook ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-red-500/30 bg-red-500/10 text-red-400'}`}>
-                  {providerStatus.outlook ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                  Outlook OAuth {providerStatus.outlook ? 'configured' : 'not configured'}
+                <span className={`flex items-center gap-1 px-2 py-0.5 rounded border font-semibold ${providerStatus.outlook.configured ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-red-500/30 bg-red-500/10 text-red-400'}`}>
+                  {providerStatus.outlook.configured ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                  Outlook OAuth {providerStatus.outlook.configured ? 'configured' : 'not configured'}
                 </span>
               </div>
             )}
 
             {/* Not-configured warning */}
-            {providerStatus !== null && (!providerStatus.gmail || !providerStatus.outlook) && (
+            {providerStatus !== null && (!providerStatus.gmail.configured || !providerStatus.outlook.configured) && (
               <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-400">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <p className="font-semibold">OAuth credentials missing</p>
-                  {!providerStatus.gmail && (
-                    <p className="text-amber-400/80 font-mono text-[10px]">Gmail: set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI in .env.local</p>
+                  {!providerStatus.gmail.configured && (
+                    <p className="text-amber-400/80 font-mono text-[10px]">Gmail: set {missingText(providerStatus.gmail)} in .env.local</p>
                   )}
-                  {!providerStatus.outlook && (
-                    <p className="text-amber-400/80 font-mono text-[10px]">Outlook: set MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, MICROSOFT_REDIRECT_URI in .env.local</p>
+                  {!providerStatus.outlook.configured && (
+                    <p className="text-amber-400/80 font-mono text-[10px]">Outlook: set {missingText(providerStatus.outlook)} in .env.local</p>
                   )}
                 </div>
               </div>
@@ -873,16 +894,16 @@ function SettingsPageInner() {
             <div className="flex flex-wrap gap-2 pt-1">
               <button
                 onClick={handleConnectGmail}
-                disabled={providerStatus !== null && !providerStatus.gmail}
-                title={providerStatus !== null && !providerStatus.gmail ? 'Gmail OAuth not configured — set env vars first' : undefined}
+                disabled={providerStatus !== null && !providerStatus.gmail.configured}
+                title={providerStatus !== null && !providerStatus.gmail.configured ? `Gmail OAuth missing: ${missingText(providerStatus.gmail)}` : undefined}
                 className="px-3 py-1.5 border border-blue-500/30 hover:border-blue-500 bg-blue-500/5 hover:bg-blue-500/15 text-blue-500 text-xs font-semibold rounded-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
               >
                 + Connect Gmail
               </button>
               <button
                 onClick={handleConnectOutlook}
-                disabled={providerStatus !== null && !providerStatus.outlook}
-                title={providerStatus !== null && !providerStatus.outlook ? 'Outlook OAuth not configured — set env vars first' : undefined}
+                disabled={providerStatus !== null && !providerStatus.outlook.configured}
+                title={providerStatus !== null && !providerStatus.outlook.configured ? `Outlook OAuth missing: ${missingText(providerStatus.outlook)}` : undefined}
                 className="px-3 py-1.5 border border-indigo-500/30 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-500/15 text-indigo-500 text-xs font-semibold rounded-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
               >
                 + Connect Outlook

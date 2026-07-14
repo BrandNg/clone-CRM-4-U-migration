@@ -44,10 +44,10 @@ export class GmailAdapter implements EmailAdapter {
         await prisma.emailAccount.update({
           where: { id: this.config.accountId },
           data: {
-            accessToken: tokens.access_token,
+            accessToken: null,
             encAccessToken,
             tokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
-            ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token, encRefreshToken } : {}),
+            ...(tokens.refresh_token ? { refreshToken: null, encRefreshToken } : {}),
           },
         });
       }
@@ -103,10 +103,10 @@ export class GmailAdapter implements EmailAdapter {
         await prisma.emailAccount.update({
           where: { id: this.config.accountId },
           data: {
-            accessToken: tokens.access_token,
+            accessToken: null,
             encAccessToken,
             tokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
-            ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token, encRefreshToken } : {}),
+            ...(tokens.refresh_token ? { refreshToken: null, encRefreshToken } : {}),
           },
         });
       }

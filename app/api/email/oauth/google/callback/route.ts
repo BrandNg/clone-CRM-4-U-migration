@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import type { SessionUser } from '@/lib/auth';
-import { encrypt } from '@/lib/crypto';
 import { exchangeGoogleCode } from '@/lib/email/adapters/GmailAdapter';
+import { upsertOAuthEmailAccount } from '@/lib/email/oauthAccounts';
 
 export async function GET(req: NextRequest) {
   const userOrRes = await requireAuth();
@@ -31,44 +30,19 @@ export async function GET(req: NextRequest) {
   try {
     const { email, accessToken, refreshToken, tokenExpiry } = await exchangeGoogleCode(code);
 
-    const [encAccessToken, encRefreshToken] = await Promise.all([
-      accessToken ? encrypt(accessToken) : Promise.resolve(null),
-      refreshToken ? encrypt(refreshToken) : Promise.resolve(null),
-    ]);
-
-    // Check if user already connected this Gmail account
-    const existing = await prisma.emailAccount.findFirst({
-      where: { userId: user.id, email, provider: 'gmail' },
+    const result = await upsertOAuthEmailAccount({
+      user,
+      provider: 'gmail',
+      email,
+      accessToken,
+      refreshToken,
+      tokenExpiry,
     });
 
-    if (existing) {
-      await prisma.emailAccount.update({
-        where: { id: existing.id },
-        data: {
-          accessToken,
-          refreshToken,
-          encAccessToken,
-          encRefreshToken,
-          tokenExpiry,
-          isActive: true,
-          lastSyncAt: new Date(),
-        },
-      });
-    } else {
-      await prisma.emailAccount.create({
-        data: {
-          userId: user.id,
-          email,
-          provider: 'gmail',
-          accessToken,
-          refreshToken,
-          encAccessToken,
-          encRefreshToken,
-          tokenExpiry,
-          isActive: true,
-          lastSyncAt: new Date(),
-        },
-      });
+    if (!result.ok) {
+      const res = NextResponse.redirect(new URL('/settings?error=google_missing_refresh_token', req.url));
+      res.cookies.delete('oauth_nonce_google');
+      return res;
     }
 
     const res = NextResponse.redirect(new URL('/settings?success=gmail_connected', req.url));

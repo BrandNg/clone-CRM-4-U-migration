@@ -47,13 +47,18 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const userOrRes = await requireRole('director');
   if (userOrRes instanceof NextResponse) return userOrRes;
+  const currentUser = userOrRes as SessionUser;
+  if (!currentUser.tenantId) {
+    return NextResponse.json({ error: 'No tenant context' }, { status: 403 });
+  }
 
   const parsed = await parseBody(req, createUserSchema, 'Invalid user create');
   if (parsed.error) return parsed.error;
   const body = parsed.data;
+  const email = body.email.trim().toLowerCase();
 
-  const existing = await prisma.user.findUnique({ where: { email: body.email } });
-  if (existing) {
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing?.isActive) {
     return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
   }
 
@@ -68,15 +73,42 @@ export async function POST(req: NextRequest) {
   const hashedPassword = await hash(body.password, 12);
 
   try {
+    if (existing) {
+      const user = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          password: hashedPassword,
+          firstName: body.firstName,
+          lastName: body.lastName,
+          role: body.role,
+          managerId: body.managerId ?? null,
+          timezone: body.timezone ?? existing.timezone,
+          isActive: true,
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          managerId: true,
+          createdAt: true,
+        },
+      });
+
+      return NextResponse.json(user);
+    }
+
     const user = await prisma.user.create({
       data: {
-        email: body.email,
+        email,
         password: hashedPassword,
         firstName: body.firstName,
         lastName: body.lastName,
         role: body.role,
         managerId: body.managerId ?? null,
         timezone: body.timezone ?? 'UTC',
+        tenantId: currentUser.tenantId,
       },
       select: {
         id: true,

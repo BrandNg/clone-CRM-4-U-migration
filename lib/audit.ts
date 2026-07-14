@@ -1,6 +1,28 @@
 import { Prisma } from '@prisma/client';
 import { tenantStorage } from './tenant-context';
 
+const SENSITIVE_FIELDS = new Set([
+  'accessToken',
+  'refreshToken',
+  'encAccessToken',
+  'encRefreshToken',
+  'encPassword',
+  'password',
+]);
+
+const redactSensitiveFields = (value: any): any => {
+  if (!value || typeof value !== 'object') return value;
+  if (value instanceof Date) return value;
+  if (Array.isArray(value)) return value.map(redactSensitiveFields);
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => [
+      key,
+      SENSITIVE_FIELDS.has(key) ? '[REDACTED]' : redactSensitiveFields(entry),
+    ])
+  );
+};
+
 export const auditExtension = Prisma.defineExtension((client) => {
   return client.$extends({
     query: {
@@ -26,7 +48,7 @@ export const auditExtension = Prisma.defineExtension((client) => {
                 action: `create_${model.toLowerCase()}`,
                 tableName: model,
                 recordId: (result as any).id || '',
-                changedFields: args.data || {},
+                changedFields: redactSensitiveFields(args.data || {}),
                 tenantId,
               },
             });
@@ -60,7 +82,7 @@ export const auditExtension = Prisma.defineExtension((client) => {
 
                 if (oldValue !== newValue && newValue !== undefined && key !== 'updatedAt') {
                   if (typeof newValue !== 'object' || newValue === null || Array.isArray(newValue)) {
-                    changedFields[key] = { old: oldValue, new: newValue };
+                    changedFields[key] = redactSensitiveFields({ old: oldValue, new: newValue });
                   }
                 }
               }
@@ -122,7 +144,7 @@ export const auditExtension = Prisma.defineExtension((client) => {
                 action: `delete_${model.toLowerCase()}`,
                 tableName: model,
                 recordId: (result as any).id || (args.where as any).id || '',
-                changedFields: currentData || {},
+                changedFields: redactSensitiveFields(currentData || {}),
                 tenantId,
               },
             });
